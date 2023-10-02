@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import store from '@/store/store.ts';
 import iconConfig from '@/assets/icons/icon.config.json';
 
 // 参数
@@ -9,13 +7,13 @@ const prop = withDefaults(
         /** 图标名（bootstrap图标：https://icons.bootcss.com/） */
         iconName: string;
         /** 图标路径名，默认'bootstrap' */
-        iconPathName: string;
+        iconPathName?: string;
         /** 宽度，默认：16 */
-        width: string | number;
+        width?: string | number;
         /** 高度，默认：16 */
-        height: string | number;
+        height?: string | number;
         /** 填充，默认：'currentColor' */
-        fill: string;
+        fill?: string;
     }>(),
     {
         iconPathName: 'bootstrap',
