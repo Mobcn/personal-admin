@@ -8,7 +8,7 @@ const currentComponent = ref<Component | null>(null);
 // 初始化操作
 (async () => {
     try {
-        currentComponent.value = markRaw((await import('@/views/admin/Main.vue')).default);
+        currentComponent.value = markRaw((await import('@/views/admin/MoDashboard.vue')).default);
     } catch (error) {
         console.log(error);
         currentComponent.value = markRaw((await import('@/views/common/404.vue')).default);

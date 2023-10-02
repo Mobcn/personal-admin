@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import MoMenuItem from './MoMenuItem.vue';
+import { menuDataList, leafMenuDataList } from '@/config/mo-sidebar';
+
 /** 参数 */
 const props = defineProps<{
     /** 菜单是否折叠 */
@@ -7,29 +10,13 @@ const props = defineProps<{
 </script>
 
 <template>
-    <el-menu class="border-none" default-active="1" :collapse="props.collapse" :collapse-transition="false">
-        <el-tooltip :disabled="!props.collapse" effect="dark" content="Navigator One" placement="right">
-            <el-menu-item index="1">
-                <el-icon><mo-icon icon-name="speedometer"></mo-icon></el-icon>
-                <span>Navigator One</span>
-            </el-menu-item>
-        </el-tooltip>
-        <el-sub-menu index="2">
-            <template #title>
-                <el-icon><mo-icon icon-name="speedometer"></mo-icon></el-icon>
-                <span>Navigator Two</span>
-            </template>
-            <el-menu-item index="1-1">item one</el-menu-item>
-            <el-menu-item index="1-2">item two</el-menu-item>
-        </el-sub-menu>
-        <el-menu-item index="3">
-            <el-icon><mo-icon icon-name="speedometer"></mo-icon></el-icon>
-            <span>Navigator Three</span>
-        </el-menu-item>
-        <el-menu-item index="4">
-            <el-icon><mo-icon icon-name="speedometer"></mo-icon></el-icon>
-            <span>Navigator Four</span>
-        </el-menu-item>
+    <el-menu
+        class="border-none"
+        :default-active="leafMenuDataList[0]?._id"
+        :collapse="props.collapse"
+        :collapse-transition="false"
+    >
+        <MoMenuItem :menu-data-list="menuDataList" :collapse="props.collapse" />
     </el-menu>
 </template>
 

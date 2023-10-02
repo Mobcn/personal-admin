@@ -49,6 +49,7 @@ declare global {
   const ref: typeof import('vue')['ref']
   const request: typeof import('../utils/request')['default']
   const resolveComponent: typeof import('vue')['resolveComponent']
+  const resolveMenu: typeof import('../utils/menu')['resolveMenu']
   const settingApi: typeof import('../api/setting-service')['settingApi']
   const settingService: typeof import('../api/setting-service')['default']
   const shallowReactive: typeof import('vue')['shallowReactive']
