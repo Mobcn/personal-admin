@@ -6,7 +6,7 @@ type MenuData = {
     _id?: string;
     /** 菜单项标题 */
     title: string;
-    /** 菜单项图标 */
+    /** 菜单项图标（bootstrap图标：https://icons.bootcss.com/） */
     icon?: string;
 } & (
     | {
