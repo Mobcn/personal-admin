@@ -119,9 +119,15 @@ export type OpenTabFunction = (_id: string, title?: string) => void;
             </el-header>
             <el-divider class="m0" />
             <el-main class="p0 overflow-hidden">
-                <el-tabs v-model="currentTabValue" type="border-card" closable @tab-remove="removeTab">
+                <el-tabs
+                    class="mo-dashboard__tabs"
+                    v-model="currentTabValue"
+                    type="border-card"
+                    closable
+                    @tab-remove="removeTab"
+                >
                     <el-tab-pane v-for="item in tabs" :key="item._id" :label="item.title" :name="item._id">
-                        <el-scrollbar>
+                        <el-scrollbar class="mo-dashboard__scrollbar">
                             <component :is="item.component" :params="item.params" />
                         </el-scrollbar>
                     </el-tab-pane>
@@ -132,25 +138,25 @@ export type OpenTabFunction = (_id: string, title?: string) => void;
 </template>
 
 <style scoped>
-.el-tabs {
+.mo-dashboard__tabs.el-tabs {
     display: flex;
     flex-flow: column;
     height: 100%;
     border-radius: 0.5rem;
 }
 
-.el-tabs >>> .el-tabs__content {
+.mo-dashboard__tabs.el-tabs :deep(.el-tabs__content) {
     flex: 1;
     padding: 0;
 }
 
-.el-tabs >>> .el-tabs__content .el-tab-pane {
+.mo-dashboard__tabs.el-tabs :deep(.el-tabs__content .el-tab-pane) {
     position: absolute;
     width: 100%;
     height: 100%;
 }
 
-.el-tabs .el-scrollbar {
+.mo-dashboard__tabs.el-tabs .mo-dashboard__scrollbar.el-scrollbar {
     position: absolute;
     box-sizing: border-box;
     width: 100%;
@@ -158,11 +164,11 @@ export type OpenTabFunction = (_id: string, title?: string) => void;
     padding: 0.5rem;
 }
 
-.el-tabs .el-scrollbar >>> .el-scrollbar__view {
+.mo-dashboard__tabs.el-tabs .mo-dashboard__scrollbar.el-scrollbar :deep(.el-scrollbar__view) {
     height: 100%;
 }
 
-.el-tabs >>> .el-tabs__header .el-tabs__nav .el-tabs__item:first-child i {
+.mo-dashboard__tabs.el-tabs :deep(.el-tabs__header .el-tabs__nav .el-tabs__item:first-child i) {
     display: none;
 }
 </style>
