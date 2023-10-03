@@ -25,7 +25,7 @@ const menuData: MenuData[] = [
                 title: '标签管理',
                 icon: 'tags',
                 path: '/management/tag',
-                component: () => import('@/views/common/404.vue')
+                component: () => import('@/views/admin/tag/MoTag.vue')
             }
         ]
     }

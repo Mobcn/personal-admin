@@ -7,6 +7,11 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    MoGrid: typeof import('./../components/grid/MoGrid.vue')['default']
     MoIcon: typeof import('./../components/icons/MoIcon.vue')['default']
+    MoPagination: typeof import('./../components/grid/components/MoPagination.vue')['default']
+    MoSearch: typeof import('./../components/grid/components/MoSearch.vue')['default']
+    MoTable: typeof import('./../components/grid/components/MoTable.vue')['default']
+    MoToolbar: typeof import('./../components/grid/components/MoToolbar.vue')['default']
   }
 }
