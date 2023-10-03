@@ -63,7 +63,7 @@ function openTab(_id: string, title?: string, params?: any) {
  *
  * @param _id 标签页标识ID
  */
-const removeTab = (_id: string | number) => {
+function removeTab(_id: string | number) {
     let active = currentTabValue.value;
     if (active === _id) {
         tabs.forEach((tab, index) => {
@@ -78,7 +78,7 @@ const removeTab = (_id: string | number) => {
     currentTabValue.value = active;
     const removeIndex = tabs.findIndex((tab) => tab._id === _id);
     tabs.splice(removeIndex, 1);
-};
+}
 
 /**
  * 打开404标签页
