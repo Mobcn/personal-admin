@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import MoMenuItem from './MoMenuItem.vue';
 import { menuDataList, leafMenuDataList } from '@/config/mo-sidebar';
-import type { OpenTabFunction } from './MoDashboard.vue';
+import type { OpenTabFunction } from '../MoDashboard.vue';
 
 /** 参数 */
 const props = defineProps<{

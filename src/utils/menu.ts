@@ -1,3 +1,6 @@
+/** 组件获取 */
+type ComponentGet = () => Promise<{ default: Component }> | Component;
+
 /**
  * 菜单数据
  */
@@ -17,7 +20,7 @@ type MenuData = {
           /** 菜单项路由 */
           path: string;
           /** 菜单项组件 */
-          component: string;
+          component: ComponentGet;
       }
 );
 
@@ -30,7 +33,7 @@ type ResolveMenuResult = {
     /** 叶节点菜单数据列表 */
     leafMenuDataList: MenuData[];
     /** 路由映射集 */
-    routeMap: Map<string, [string, string]>;
+    routeMap: Map<string, [string, ComponentGet]>;
     /** 通过菜单项ID获取菜单项 */
     getMenuItem: (id: string, thisArg?: MenuData[]) => MenuData | null;
 };
@@ -72,6 +75,23 @@ function flatMap<T>(target: T[], unfoldFun: (array: T) => T[] | [T], depth = 1) 
 }
 
 /**
+ * 菜单数据列表克隆
+ *
+ * @param menuDataList 菜单数据列表
+ */
+function cloneMenuDataList(menuDataList: MenuData[]) {
+    const clone: MenuData[] = [];
+    for (const menuData of menuDataList) {
+        const cloneMenuData: MenuData = { ...menuData };
+        if ('subMenu' in cloneMenuData) {
+            cloneMenuData.subMenu = cloneMenuDataList(cloneMenuData.subMenu);
+        }
+        clone.push(cloneMenuData);
+    }
+    return clone;
+}
+
+/**
  * 生成菜单项ID
  *
  * @param menuDataList 菜单数据列表
@@ -95,14 +115,14 @@ function generateMenuID(menuDataList: MenuData[], preffix = '') {
  */
 export function resolveMenu(config: MenuData[]): ResolveMenuResult {
     /** 菜单数据列表 */
-    const menuDataList: MenuData[] = JSON.parse(JSON.stringify(config));
+    const menuDataList: MenuData[] = cloneMenuDataList(config);
     generateMenuID(menuDataList);
 
     /** 叶节点菜单数据列表 */
     const leafMenuDataList = flatMap(menuDataList, (item) => ('subMenu' in item ? item.subMenu : [item]), Infinity);
 
     /** 路由映射集 */
-    const routeMap: Map<string, [string, string]> = new Map();
+    const routeMap: Map<string, [string, ComponentGet]> = new Map();
     leafMenuDataList.forEach((item) => 'path' in item && routeMap.set(item.path, [item._id!, item.component]));
 
     /**

@@ -9,7 +9,7 @@ const menuData: MenuData[] = [
         title: '首页',
         icon: 'speedometer',
         path: '/',
-        component: '/src/views/admin/home/MoHome.vue'
+        component: () => import('@/views/admin/home/MoHome.vue')
     },
     {
         title: '内容管理',
@@ -19,13 +19,13 @@ const menuData: MenuData[] = [
                 title: '分类管理',
                 icon: 'grid',
                 path: '/management/category',
-                component: '/src/views/common/404.vue'
+                component: () => import('@/views/common/404.vue')
             },
             {
                 title: '标签管理',
                 icon: 'tags',
                 path: '/management/tag',
-                component: '/src/views/common/404.vue'
+                component: () => import('@/views/common/404.vue')
             }
         ]
     }

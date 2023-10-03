@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import MoNavbar from './MoNavbar.vue';
-import MoSidebar from './MoSidebar.vue';
+import MoNavbar from './compoents/MoNavbar.vue';
+import MoSidebar from './compoents/MoSidebar.vue';
 import { getMenuItem } from '@/config/mo-sidebar';
 
 /**
@@ -26,39 +26,37 @@ const tabs = reactive<TabItem[]>([]);
 
 /**
  * 打开标签页
+ *
+ * @param _id ID
+ * @param title 标题
+ * @param params 参数
  */
-const openTab = (() => {
-    // @ts-ignore
-    const components: { [path: string]: () => Promise<{ default: Component }> } = import.meta.glob('/src/**/*.vue');
-
-    /**
-     * @param _id ID
-     * @param title 标题
-     * @param params 参数
-     */
-    return (_id: string, title?: string, params?: any) => {
-        for (const tab of tabs) {
-            if (tab._id === _id) {
-                currentTabValue.value = _id;
-                return;
-            }
-        }
-        const menuData = getMenuItem(_id);
-        if (menuData && 'component' in menuData) {
-            components[menuData.component]().then((module) => {
-                tabs.push({
-                    _id,
-                    title: title || menuData.title,
-                    params,
-                    component: markRaw(module.default)
-                });
-                currentTabValue.value = _id;
-            });
+function openTab(_id: string, title?: string, params?: any) {
+    for (const tab of tabs) {
+        if (tab._id === _id) {
+            currentTabValue.value = _id;
             return;
         }
+    }
+    const menuData = getMenuItem(_id);
+    if (!menuData || !('component' in menuData)) {
         openNotFoundTab(_id, title);
-    };
-})();
+        return;
+    }
+    let componentLike = menuData.component();
+    if (componentLike instanceof Promise) {
+        componentLike = componentLike.then((module) => module.default);
+    }
+    Promise.resolve(componentLike).then((component) => {
+        tabs.push({
+            _id,
+            title: title || menuData.title,
+            params,
+            component: markRaw(component)
+        });
+        currentTabValue.value = _id;
+    });
+}
 
 /**
  * 删除标签页
