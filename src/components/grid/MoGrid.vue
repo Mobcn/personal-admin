@@ -10,39 +10,44 @@ const props = defineProps<MoGridProps<T>>();
 const moTableRef = ref<MoTableInstance<T>>();
 
 /** 表格数据 */
-const data = ref([]) as Ref<T[]>;
+const tableData = ref([]) as Ref<T[]>;
 
 /** 当前页码 */
 const page = ref(1);
+/** 每页最大数据条数 */
+const pageSize = ref(props.pagination?.pageSize ?? 10);
 /** 总数据条数 */
-const total = ref(0);
+const tableTotal = ref(0);
 
 /** 查询事件 */
-const searchEvent = (searchData: SearchData<keyof T>) => {
-    console.log(searchData);
+const searchEvent = async (searchData: SearchData<keyof T & string>) => {
+    page.value = 1;
+    const params = { searchData, page: 1, pageSize: pageSize.value };
+    const { data, total } = await props.api.list(params);
+    tableData.value = data;
+    tableTotal.value = total;
 };
+
 /** 添加事件 */
 const addEvent = () => {
     console.log('添加');
 };
+
 /** 删除事件 */
 const deleteEvent = (row: T) => {
-    console.log(row);
-    console.log('删除');
+    props.api.remove(row);
 };
 /** 批量删除事件 */
 const deleteBatchEvent = () => {
     const $table = moTableRef.value;
     if ($table) {
         const rows = $table.getSelectionRows();
-        console.log(rows);
-        console.log('批量删除');
+        props.api.removeBatch(rows);
     }
 };
 /** 编辑事件 */
 const editEvent = (row: T) => {
-    console.log(row);
-    console.log('编辑');
+    props.api.update(row);
 };
 /** 页码修改事件 */
 const pageChangeEvent = (value: number) => {
@@ -51,7 +56,9 @@ const pageChangeEvent = (value: number) => {
 
 // 初始化操作
 (async () => {
-    data.value = await props.api.list({ searchData: {}, page: 1, pageSize: 10 });
+    const { data, total } = await props.api.list({ searchData: {}, page: 1, pageSize: 10 });
+    tableData.value = data;
+    tableTotal.value = total;
 })();
 </script>
 <script lang="ts">
@@ -60,7 +67,7 @@ const pageChangeEvent = (value: number) => {
  */
 type ListApiParams<T> = {
     /** 查询数据 */
-    searchData: SearchData<keyof T>;
+    searchData: SearchData<keyof T & string>;
     /** 页码 */
     page: number;
     /** 每页最大数据条数 */
@@ -76,7 +83,7 @@ export type MoGridProps<T = any> = {
     /** 工具栏配置 */
     toolbar?: MoToolbarProps;
     /** 查询栏配置 */
-    search?: MoSearchProps<keyof T>;
+    search?: MoSearchProps<keyof T & string>;
     /** 分页配置 */
     pagination?: {
         /** 每页最大数据条数 */
@@ -85,7 +92,7 @@ export type MoGridProps<T = any> = {
     /** 接口 */
     api: {
         /** 获取数据列表 */
-        list: (params: ListApiParams<T>) => T[] | Promise<T[]>;
+        list: (params: ListApiParams<T>) => { data: T[]; total: number } | Promise<{ data: T[]; total: number }>;
         /** 添加数据 */
         add: (data: T) => Promise<boolean> | boolean;
         /** 删除数据 */
@@ -109,15 +116,16 @@ export type MoGridProps<T = any> = {
                 <mo-toolbar v-bind="props.toolbar" @add="addEvent" @delete-batch="deleteBatchEvent" />
             </el-header>
             <el-main class="pt-3">
-                <mo-table ref="moTableRef" v-bind="props.table" :data="data" @edit="editEvent" @delete="deleteEvent" />
+                <mo-table
+                    ref="moTableRef"
+                    v-bind="props.table"
+                    :data="tableData"
+                    @edit="editEvent"
+                    @delete="deleteEvent"
+                />
             </el-main>
             <el-footer>
-                <mo-pagination
-                    :page="page"
-                    :page-size="props.pagination?.pageSize"
-                    :total="total"
-                    @change="pageChangeEvent"
-                />
+                <mo-pagination :page="page" :page-size="pageSize" :total="tableTotal" @change="pageChangeEvent" />
             </el-footer>
         </el-container>
     </el-container>

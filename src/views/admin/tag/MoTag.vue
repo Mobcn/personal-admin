@@ -39,10 +39,13 @@ const gridProps: MoGridProps<RowVO> = {
     },
     pagination: { pageSize: 10 },
     api: {
-        list: () => [
-            { name: '张三', age: 18 },
-            { name: '李四', age: 20 }
-        ],
+        list: () => ({
+            data: [
+                { name: '张三', age: 18 },
+                { name: '李四', age: 20 }
+            ],
+            total: 2
+        }),
         add: () => true,
         remove: () => true,
         removeBatch: () => true,

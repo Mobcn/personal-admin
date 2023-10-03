@@ -61,7 +61,7 @@ export type MoTableProps<T> = {
     /** 表格数据 */
     data: T[];
     /** 列配置 */
-    columns: MoTableColumn<keyof T>[];
+    columns: MoTableColumn<keyof T & string>[];
     /** 操作 */
     operations?: OperationEnum[];
     /** 对齐方式 */

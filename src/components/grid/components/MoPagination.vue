@@ -15,10 +15,10 @@ const emits = defineEmits<{
 export type MoPapaginationProps = {
     /** 当前页码 */
     page: number;
+    /** 每页最大数据条数 */
+    pageSize: number;
     /** 总数据条数 */
     total: number;
-    /** 每页最大数据条数 */
-    pageSize?: number;
 };
 </script>
 
