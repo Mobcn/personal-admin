@@ -2,8 +2,8 @@
 import type { MoSearchProps, SearchData } from './components/MoSearch.vue';
 import type { MoToolbarProps } from './components/MoToolbar.vue';
 import type { MoTableProps, MoTableInstance } from './components/MoTable.vue';
-import { ElMessageBox } from 'element-plus';
 import type { EditData, MoEditDialogConfig, MoEditDialogParams } from './components/MoEditDialog.vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 /** 参数 */
 const props = defineProps<MoGridProps<T>>();
@@ -26,13 +26,15 @@ const pageSize = ref(props.pagination?.pageSize ?? 10);
 /** 总数据条数 */
 const tableTotal = ref(0);
 
+/** 是否加载中 */
+const loading = ref(false);
+
 /** 查询事件 */
 const searchEvent = async (searchData: SearchData<T>) => {
     page.value = 1;
     loadData(searchData);
 };
-/** 添加事件 */
-const addEvent = () => openEditDialog();
+
 /** 删除事件 */
 const deleteEvent = (row: T) => {
     ElMessageBox.confirm(`确定要删除吗?`, '系统提示', {
@@ -40,46 +42,91 @@ const deleteEvent = (row: T) => {
         cancelButtonText: '取消',
         type: 'warning'
     })
+        .then(() => (loading.value = true))
         .then(async () => {
-            await props.api.remove(row);
-            loadData();
+            try {
+                await props.api.remove(row);
+            } catch (error) {
+                process.env.VUE_APP_ENV !== 'production' && console.error(error);
+                ElMessage({ message: '删除失败！', type: 'error' });
+                return;
+            }
+            ElMessage({ message: '删除成功！', type: 'success' });
+            await loadData();
         })
-        .catch(() => 'cancel');
+        .catch(() => 'cancel')
+        .finally(() => (loading.value = false));
 };
+
 /** 批量删除事件 */
 const deleteBatchEvent = async () => {
-    ElMessageBox.confirm(`确定要批量删除选择项吗?`, '系统提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-    })
-        .then(async () => {
-            const $table = moTableRef.value;
-            if ($table) {
-                const rows = $table.getSelectionRows();
-                await props.api.removeBatch(rows);
-                loadData();
-            }
+    const $table = moTableRef.value;
+    if ($table) {
+        ElMessageBox.confirm(`确定要批量删除选择项吗?`, '系统提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
         })
-        .catch(() => 'cancel');
+            .then(() => (loading.value = true))
+            .then(async () => {
+                const rows = $table.getSelectionRows();
+                if (rows.length <= 0) {
+                    ElMessage({ message: '至少选择一项!', type: 'warning' });
+                } else {
+                    try {
+                        await props.api.removeBatch(rows);
+                    } catch (error) {
+                        process.env.VUE_APP_ENV !== 'production' && console.error(error);
+                        ElMessage({ message: '批量删除失败！', type: 'error' });
+                        return;
+                    }
+                    ElMessage({ message: '批量删除成功！', type: 'success' });
+                    await loadData();
+                }
+            })
+            .catch(() => 'cancel')
+            .finally(() => (loading.value = false));
+    }
 };
+
 /** 编辑事件 */
 const editEvent = (row: T) => openEditDialog({ ...row });
+
 /** 页码修改事件 */
 const pageChangeEvent = (value: number) => {
     page.value = value;
     loadData();
 };
+
+/** 每页最大数据条数修改事件 */
+const pageSizeChangeEvent = (value: number) => {
+    pageSize.value = value;
+    loadData();
+};
+
 /** 编辑弹窗确认事件 */
 const confirmEvent = async (type: 'add' | 'update', editData: EditData<T>) => {
+    loading.value = true;
     if (type === 'add') {
-        await props.api.add(editData);
-        page.value = 1;
-        loadData();
+        try {
+            await props.api.add(editData);
+            ElMessage({ message: '添加成功！', type: 'success' });
+            page.value = 1;
+        } catch (error) {
+            process.env.VUE_APP_ENV !== 'production' && console.error(error);
+            ElMessage({ message: '添加失败！', type: 'error' });
+        }
     } else {
-        await props.api.update(editData);
-        loadData();
+        try {
+            await props.api.update(editData);
+            ElMessage({ message: '更新成功！', type: 'success' });
+        } catch (error) {
+            process.env.VUE_APP_ENV !== 'production' && console.error(error);
+            ElMessage({ message: '更新失败！', type: 'error' });
+        }
     }
+    await loadData();
+    loading.value = false;
     editDialogVisible.value = false;
 };
 
@@ -89,13 +136,20 @@ const confirmEvent = async (type: 'add' | 'update', editData: EditData<T>) => {
  * @param searchData 查询数据
  */
 async function loadData(searchData?: SearchData<T>) {
-    const { data, total } = await props.api.list({
-        searchData: searchData ?? {},
-        page: page.value,
-        pageSize: pageSize.value
-    });
-    tableData.value = data;
-    tableTotal.value = total;
+    loading.value = true;
+    try {
+        const { data, total } = await props.api.list({
+            searchData,
+            page: page.value,
+            pageSize: pageSize.value
+        });
+        tableData.value = data;
+        tableTotal.value = total;
+    } catch (error) {
+        ElMessage({ message: '加载数据失败！', type: 'error' });
+    } finally {
+        loading.value = false;
+    }
 }
 
 /**
@@ -108,6 +162,8 @@ function openEditDialog(data?: T) {
 
 // 初始化操作
 (async () => {
+    // 加载第一页数据
+    page.value = 1;
     loadData();
 })();
 </script>
@@ -117,7 +173,7 @@ function openEditDialog(data?: T) {
  */
 type ListApiParams<T> = {
     /** 查询数据 */
-    searchData: SearchData<T>;
+    searchData?: SearchData<T>;
     /** 页码 */
     page: number;
     /** 每页最大数据条数 */
@@ -158,14 +214,14 @@ export type MoGridProps<T extends Record<string, any>> = {
 </script>
 
 <template>
-    <el-container class="h-full">
+    <el-container v-loading="loading" class="h-full">
         <el-header class="h-auto" v-if="props.search">
             <mo-search v-bind="props.search" @search="searchEvent" />
             <el-divider class="m0" />
         </el-header>
         <el-container>
             <el-header v-if="props.toolbar" class="h-auto pt-3">
-                <mo-toolbar v-bind="props.toolbar" @add="addEvent" @delete-batch="deleteBatchEvent" />
+                <mo-toolbar v-bind="props.toolbar" @add="openEditDialog" @delete-batch="deleteBatchEvent" />
             </el-header>
             <el-main class="pt-3">
                 <mo-table
@@ -176,8 +232,14 @@ export type MoGridProps<T extends Record<string, any>> = {
                     @delete="deleteEvent"
                 />
             </el-main>
-            <el-footer>
-                <mo-pagination :page="page" :page-size="pageSize" :total="tableTotal" @change="pageChangeEvent" />
+            <el-footer class="h-auto">
+                <mo-pagination
+                    :page="page"
+                    :page-size="pageSize"
+                    :total="tableTotal"
+                    @change="pageChangeEvent"
+                    @size-change="pageSizeChangeEvent"
+                />
             </el-footer>
         </el-container>
         <mo-edit-dialog
@@ -191,4 +253,8 @@ export type MoGridProps<T extends Record<string, any>> = {
     </el-container>
 </template>
 
-<style scoped></style>
+<style scoped>
+.el-container :deep(.el-loading-mask) {
+    z-index: 3000;
+}
+</style>

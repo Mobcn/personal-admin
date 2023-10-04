@@ -142,10 +142,12 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
 
 <template>
     <el-dialog
+        modal-class="mo-edit-dialog"
         v-model="visible"
         :title="formData[primaryKey] ? '编辑' : '添加'"
         :width="props.config.width"
         @open="() => formRef?.clearValidate()"
+        @closed="() => (formData = {} as T)"
     >
         <el-form
             ref="formRef"
@@ -213,12 +215,9 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
     </el-dialog>
 </template>
 
-<style scoped>
-.el-form {
-    margin-top: 0.8rem;
-}
-.el-form--inline .el-form-item {
-    margin-right: 0.8rem;
-    margin-bottom: 0.8rem;
+<style>
+.mo-edit-dialog.el-overlay,
+.mo-edit-dialog.el-overlay .el-overlay-dialog {
+    position: absolute;
 }
 </style>

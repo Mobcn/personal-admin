@@ -6,6 +6,8 @@ import Components from 'unplugin-vue-components/vite';
 import { Plugin as importToCDN } from 'vite-plugin-cdn-import';
 import path from 'path';
 
+const { NODE_ENV, ...other } = process.env;
+
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
@@ -57,5 +59,8 @@ export default defineConfig({
             '@': path.resolve('./src')
         }
     },
-    base: './'
+    base: './',
+    define: {
+        'process.env': { VUE_APP_ENV: NODE_ENV }
+    }
 });

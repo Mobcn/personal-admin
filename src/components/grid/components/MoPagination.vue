@@ -6,6 +6,8 @@ const props = defineProps<MoPapaginationProps>();
 const emits = defineEmits<{
     /** 页码修改事件 */
     change: [page: number];
+    /** 每页最大数据条数修改事件 */
+    sizeChange: [pageSize: number];
 }>();
 </script>
 <script lang="ts">
@@ -24,10 +26,12 @@ export type MoPapaginationProps = {
 
 <template>
     <el-pagination
-        layout="prev, pager, next"
+        class="pb-2.5"
+        layout="prev, pager, next, jumper, sizes, total"
         :current-page="props.page"
         :page-size="props.pageSize"
         :total="props.total"
         @current-change="(page) => emits('change', page)"
+        @size-change="(pageSize) => emits('sizeChange', pageSize)"
     />
 </template>

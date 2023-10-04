@@ -83,7 +83,7 @@ export type MoTableInstance<T> = ComponentPublicInstance<
 </script>
 
 <template>
-    <el-table ref="tableRef" :data="props.data" border>
+    <el-table ref="tableRef" :data="props.data" height="100%" border>
         <el-table-column type="selection" width="55" />
         <el-table-column
             v-for="column in props.columns"
