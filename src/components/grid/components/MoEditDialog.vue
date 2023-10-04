@@ -49,7 +49,18 @@ const confirmClickEvent = () => {
         $form.validate((valid) => {
             if (valid) {
                 const type = formData.value[primaryKey.value] ? 'update' : 'add';
-                const data = { ...formData.value };
+                const data = {} as any;
+                for (const key in formData.value) {
+                    const value: any = formData.value[key];
+                    if (!value) {
+                        continue;
+                    }
+                    if (value instanceof Date) {
+                        data[key] = new Date(value).toISOString();
+                    } else {
+                        value && (data[key] = value);
+                    }
+                }
                 valid && emits('confirm', type, data);
             }
         });

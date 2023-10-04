@@ -17,9 +17,9 @@ type ArticleListParams = {
     /** 作者ID */
     author?: string;
     /** 页码 */
-    page?: string;
+    page?: number;
     /** 每页数据条数 */
-    limit?: string;
+    limit?: number;
 };
 
 /**
@@ -49,7 +49,7 @@ type ArticleUpdateParams = Omit<ArticleSaveParams, 'title'> & {
     /** 标题 */
     title?: string;
     /** 置顶时间 */
-    top_time?: Date;
+    top_time?: string;
     /** 状态 */
     status?: number;
 };
@@ -95,7 +95,7 @@ const articleService = {
      * @param page 页码
      * @param limit 每页数据条数
      */
-    list: async (params: ArticleListParams) => {
+    list: async (params: ArticleListParams): Promise<{ list: ArticleVO[]; total: number }> => {
         const _params: any = { ...params };
         params.startTime && (_params.startTime = params.startTime.toISOString());
         params.endTime && (_params.startTime = params.endTime.toISOString());
@@ -107,16 +107,16 @@ const articleService = {
     /**
      * 获取文章信息
      *
-     * @param id 文章ID
+     * @param _id 文章ID
      */
-    get: async (id: string) => service.get(articleApi.get, { _id: id }),
+    get: async (_id: string): Promise<ArticleVO> => service.get(articleApi.get, { _id }),
 
     /**
      * 添加文章
      *
      * @param params 参数
      */
-    save: async (params: ArticleSaveParams) => {
+    save: async (params: ArticleSaveParams): Promise<Article> => {
         const _params: any = { ...params };
         params.tags && (_params.tags = params.tags.join(','));
         return service.post(articleApi.save, params);
@@ -127,10 +127,9 @@ const articleService = {
      *
      * @param params 参数
      */
-    update: async (params: ArticleUpdateParams) => {
+    update: async (params: ArticleUpdateParams): Promise<Article> => {
         const _params: any = { ...params };
         params.tags && (_params.tags = params.tags.join(','));
-        params.top_time && (_params.top_time = params.top_time.toISOString());
         params.status !== undefined && (_params.status = String(params.status));
         return service.post(articleApi.update, _params);
     },
@@ -138,9 +137,47 @@ const articleService = {
     /**
      * 删除文章
      *
-     * @param id 文章ID
+     * @param _id 文章ID
      */
-    remove: async (id: string) => service.post(articleApi.remove, { _id: id })
+    remove: async (_id: string): Promise<Article> => service.post(articleApi.remove, { _id })
 };
 
 export default articleService;
+
+/**
+ * 文章
+ */
+export type Article = {
+    /** ID */
+    _id: string;
+    /** 标题 */
+    title: string;
+    /** 内容 */
+    content: string;
+    /** 描述 */
+    description?: string;
+    /** 封面 */
+    cover?: string;
+    /** 作者 */
+    author: string;
+    /** 置顶时间 */
+    top_time?: string;
+    /** 浏览次数 */
+    views: number;
+    /** 分类 */
+    category?: string;
+    /** 创建时间 */
+    create_time: string;
+    /** 更新时间 */
+    update_time: string;
+};
+
+/**
+ * 文章VO
+ */
+export type ArticleVO = Article & {
+    /** 分类名称 */
+    categoryName?: string;
+    /** 标签 */
+    tags?: { _id: string; name: string }[];
+};

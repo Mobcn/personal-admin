@@ -225,10 +225,10 @@ export default class FetchService {
     private mergeURL(url: string, params: RequestParams) {
         const _url = new URL(url, 'http://localhost');
         for (const [key, value] of Object.entries(params)) {
-            if (typeof value === 'string') {
-                _url.searchParams.append(key, value);
-            } else {
+            if (value instanceof Array) {
                 value.forEach((item) => _url.searchParams.append(key, item));
+            } else {
+                _url.searchParams.append(key, value);
             }
         }
         return url.startsWith('http') ? _url.href : _url.href.replace('http://localhost', '');

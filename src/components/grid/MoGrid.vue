@@ -146,6 +146,7 @@ async function loadData(searchData?: SearchData<T>) {
         tableData.value = data;
         tableTotal.value = total;
     } catch (error) {
+        process.env.VUE_APP_ENV !== 'production' && console.error(error);
         ElMessage({ message: '加载数据失败！', type: 'error' });
     } finally {
         loading.value = false;

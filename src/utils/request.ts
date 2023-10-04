@@ -22,7 +22,11 @@ service.addRequestInterceptor((_url, options) => {
 
 // 响应拦截器
 service.addResponseInterceptor((responseData) => {
-    return responseData.data;
+    const { code, message, data } = responseData.data;
+    if (code !== 0) {
+        throw new Error(message);
+    }
+    return data;
 });
 
 // 响应错误拦截器
