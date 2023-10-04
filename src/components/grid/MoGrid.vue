@@ -1,7 +1,9 @@
-<script setup lang="ts" generic="T">
+<script setup lang="ts" generic="T extends Record<string, any>">
 import type { MoSearchProps, SearchData } from './components/MoSearch.vue';
 import type { MoToolbarProps } from './components/MoToolbar.vue';
 import type { MoTableProps, MoTableInstance } from './components/MoTable.vue';
+import { ElMessageBox } from 'element-plus';
+import type { EditData, MoEditDialogConfig, MoEditDialogParams } from './components/MoEditDialog.vue';
 
 /** 参数 */
 const props = defineProps<MoGridProps<T>>();
@@ -12,6 +14,11 @@ const moTableRef = ref<MoTableInstance<T>>();
 /** 表格数据 */
 const tableData = ref([]) as Ref<T[]>;
 
+/** 编辑弹窗是否显示 */
+const editDialogVisible = ref(false);
+/** 编辑弹窗数据参数 */
+const editDialogParams = ref({}) as Ref<MoEditDialogParams<T>>;
+
 /** 当前页码 */
 const page = ref(1);
 /** 每页最大数据条数 */
@@ -20,45 +27,88 @@ const pageSize = ref(props.pagination?.pageSize ?? 10);
 const tableTotal = ref(0);
 
 /** 查询事件 */
-const searchEvent = async (searchData: SearchData<keyof T & string>) => {
+const searchEvent = async (searchData: SearchData<T>) => {
     page.value = 1;
-    const params = { searchData, page: 1, pageSize: pageSize.value };
-    const { data, total } = await props.api.list(params);
-    tableData.value = data;
-    tableTotal.value = total;
+    loadData(searchData);
 };
-
 /** 添加事件 */
-const addEvent = () => {
-    console.log('添加');
-};
-
+const addEvent = () => openEditDialog();
 /** 删除事件 */
 const deleteEvent = (row: T) => {
-    props.api.remove(row);
+    ElMessageBox.confirm(`确定要删除吗?`, '系统提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+    })
+        .then(async () => {
+            await props.api.remove(row);
+            loadData();
+        })
+        .catch(() => 'cancel');
 };
 /** 批量删除事件 */
-const deleteBatchEvent = () => {
-    const $table = moTableRef.value;
-    if ($table) {
-        const rows = $table.getSelectionRows();
-        props.api.removeBatch(rows);
-    }
+const deleteBatchEvent = async () => {
+    ElMessageBox.confirm(`确定要批量删除选择项吗?`, '系统提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+    })
+        .then(async () => {
+            const $table = moTableRef.value;
+            if ($table) {
+                const rows = $table.getSelectionRows();
+                await props.api.removeBatch(rows);
+                loadData();
+            }
+        })
+        .catch(() => 'cancel');
 };
 /** 编辑事件 */
-const editEvent = (row: T) => {
-    props.api.update(row);
-};
+const editEvent = (row: T) => openEditDialog({ ...row });
 /** 页码修改事件 */
 const pageChangeEvent = (value: number) => {
     page.value = value;
+    loadData();
 };
+/** 编辑弹窗确认事件 */
+const confirmEvent = async (type: 'add' | 'update', editData: EditData<T>) => {
+    if (type === 'add') {
+        await props.api.add(editData);
+        page.value = 1;
+        loadData();
+    } else {
+        await props.api.update(editData);
+        loadData();
+    }
+    editDialogVisible.value = false;
+};
+
+/**
+ * 加载数据
+ *
+ * @param searchData 查询数据
+ */
+async function loadData(searchData?: SearchData<T>) {
+    const { data, total } = await props.api.list({
+        searchData: searchData ?? {},
+        page: page.value,
+        pageSize: pageSize.value
+    });
+    tableData.value = data;
+    tableTotal.value = total;
+}
+
+/**
+ * 打开编辑弹窗
+ */
+function openEditDialog(data?: T) {
+    editDialogParams.value = { data };
+    editDialogVisible.value = true;
+}
 
 // 初始化操作
 (async () => {
-    const { data, total } = await props.api.list({ searchData: {}, page: 1, pageSize: 10 });
-    tableData.value = data;
-    tableTotal.value = total;
+    loadData();
 })();
 </script>
 <script lang="ts">
@@ -67,7 +117,7 @@ const pageChangeEvent = (value: number) => {
  */
 type ListApiParams<T> = {
     /** 查询数据 */
-    searchData: SearchData<keyof T & string>;
+    searchData: SearchData<T>;
     /** 页码 */
     page: number;
     /** 每页最大数据条数 */
@@ -77,30 +127,32 @@ type ListApiParams<T> = {
 /**
  * 表组件参数
  */
-export type MoGridProps<T = any> = {
+export type MoGridProps<T extends Record<string, any>> = {
     /** 表格配置 */
     table: Omit<MoTableProps<T>, 'data'>;
     /** 工具栏配置 */
     toolbar?: MoToolbarProps;
     /** 查询栏配置 */
-    search?: MoSearchProps<keyof T & string>;
+    search?: MoSearchProps<T>;
     /** 分页配置 */
     pagination?: {
         /** 每页最大数据条数 */
         pageSize?: number;
     };
+    /** 编辑弹窗配置 */
+    editDialog?: MoEditDialogConfig<T>;
     /** 接口 */
     api: {
         /** 获取数据列表 */
         list: (params: ListApiParams<T>) => { data: T[]; total: number } | Promise<{ data: T[]; total: number }>;
         /** 添加数据 */
-        add: (data: T) => Promise<boolean> | boolean;
+        add: (data: EditData<T>) => Promise<void> | void;
         /** 删除数据 */
-        remove: (data: T) => Promise<boolean> | boolean;
+        remove: (data: T) => Promise<void> | void;
         /** 批量删除数据 */
-        removeBatch: (datas: T[]) => Promise<boolean> | boolean;
+        removeBatch: (datas: T[]) => Promise<void> | void;
         /** 更新数据 */
-        update: (data: T) => Promise<boolean> | boolean;
+        update: (data: EditData<T>) => Promise<void> | void;
     };
 };
 </script>
@@ -128,6 +180,14 @@ export type MoGridProps<T = any> = {
                 <mo-pagination :page="page" :page-size="pageSize" :total="tableTotal" @change="pageChangeEvent" />
             </el-footer>
         </el-container>
+        <mo-edit-dialog
+            v-if="props.editDialog"
+            v-model="editDialogVisible"
+            :config="props.editDialog"
+            :params="editDialogParams"
+            @cancel="() => (editDialogVisible = false)"
+            @confirm="confirmEvent"
+        />
     </el-container>
 </template>
 

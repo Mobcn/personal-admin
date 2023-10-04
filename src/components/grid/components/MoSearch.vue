@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T extends string">
+<script setup lang="ts" generic="T extends Record<string, any>">
 /** 参数 */
 const props = defineProps<MoSearchProps<T>>();
 
@@ -30,7 +30,7 @@ watchEffect(() => {
 
 /** 查询事件 */
 const searchEvent = () => {
-    const data = {} as SearchData<T>;
+    const data = {} as any;
     for (const key in searchData.value) {
         const value: any = searchData.value[key];
         if (!value) {
@@ -52,15 +52,12 @@ const searchEvent = () => {
 };
 </script>
 <script lang="ts">
-/** 查询数据 */
-export type SearchData<T extends string> = { [key in T]?: string | string[] };
-
 /**
  * 查询组件项
  */
-export type MoSearchComponent<T> = {
+type MoSearchComponent<T extends Record<string, any>> = {
     /** 组件名称 */
-    name: T;
+    name: keyof T & string;
     /** 组件标签 */
     label?: string;
     /** 组件大小 */
@@ -109,10 +106,13 @@ export type MoSearchComponent<T> = {
       })
 );
 
+/** 查询数据 */
+export type SearchData<T> = { [key in keyof T & string]?: string | string[] };
+
 /**
  * 查询栏参数
  */
-export type MoSearchProps<T> = {
+export type MoSearchProps<T extends Record<string, any>> = {
     /** 查询组件数组 */
     components: MoSearchComponent<T>[];
     /** 组件大小 */
