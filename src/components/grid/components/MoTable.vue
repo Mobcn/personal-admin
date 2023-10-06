@@ -101,14 +101,14 @@ export type MoTableInstance<T> = ComponentPublicInstance<
                 <template v-for="operation in props.operations">
                     <el-icon
                         v-if="operation === 'edit'"
-                        class="hover:cursor-pointer hover:color-primary"
+                        class="hover:cursor-pointer hover:color-primary mr-2"
                         @click="emits('edit', { ...row })"
                     >
                         <mo-icon icon-name="pencil-square" />
                     </el-icon>
                     <el-icon
                         v-if="operation === 'delete'"
-                        class="hover:cursor-pointer hover:color-primary ml-2"
+                        class="hover:cursor-pointer hover:color-primary"
                         @click="emits('delete', { ...row })"
                     >
                         <mo-icon icon-name="trash3" />

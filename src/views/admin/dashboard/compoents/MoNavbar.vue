@@ -16,7 +16,7 @@ const emits = defineEmits<{
 
 /** 页面修改 */
 const changePage = inject<ProvideChangePage>('changePage', () => {
-    throw new Error('changePage not found');
+    throw new Error('找不到changePage方法');
 });
 
 /**

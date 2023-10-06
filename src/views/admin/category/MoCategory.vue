@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { MoGridProps } from '@/components/grid/MoGrid.vue';
-import type { Tag } from '@/api/tag-service';
+import type { Category } from '@/api/category-service';
 
 /** 表组件参数 */
-const gridProps: MoGridProps<Tag> = {
+const gridProps: MoGridProps<Category> = {
     toolbar: {
         buttons: ['add', 'deleteBatch']
     },
@@ -38,15 +38,15 @@ const gridProps: MoGridProps<Tag> = {
         labelWidth: 80
     },
     api: {
-        list: async ({ page, limit }) => tagService.list(page, limit),
+        list: async ({ page, limit }) => categoryService.list(page, limit),
         add: async ({ name, description }) => {
-            await tagService.save(name, description);
+            await categoryService.save(name, description);
         },
         remove: async ({ _id }) => {
-            await tagService.remove(_id);
+            await categoryService.remove(_id);
         },
         removeBatch: async (removeDatas) => {
-            await tagService.remove(removeDatas.map((item) => item._id).join(','));
+            await categoryService.remove(removeDatas.map((item) => item._id).join(','));
         }
     }
 };

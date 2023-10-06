@@ -7,17 +7,22 @@ export const tagApi = {
     /**
      * 获取所有标签
      */
-    all: '/blog/category/all',
+    all: '/blog/tag/all',
+
+    /**
+     * 获取标签分页列表
+     */
+    list: '/blog/tag/list',
 
     /**
      * 添加标签
      */
-    save: '/blog/category/save',
+    save: '/blog/tag/save',
 
     /**
      * 删除标签
      */
-    remove: '/blog/category/remove'
+    remove: '/blog/tag/remove'
 };
 
 /**
@@ -26,10 +31,18 @@ export const tagApi = {
 const tagService = {
     /**
      * 获取所有标签
-     *
-     * @param params 参数
      */
-    all: async () => service.get(tagApi.all),
+    all: async (): Promise<Tag[]> => service.get(tagApi.all),
+
+    /**
+     * 获取标签分页列表
+     *
+     * @param page 页码
+     * @param limit 每页数据条数
+     */
+    list: async (page: number | string, limit: number | string): Promise<{ list: Tag[]; total: number }> => {
+        return service.get(tagApi.list, { page, limit });
+    },
 
     /**
      * 添加标签
@@ -37,7 +50,9 @@ const tagService = {
      * @param name 名称
      * @param description 描述
      */
-    save: async (name: string, description: string) => service.post(tagApi.save, { name, description }),
+    save: async (name: string, description: string): Promise<Tag> => {
+        return service.post(tagApi.save, { name, description });
+    },
 
     /**
      * 删除标签
@@ -45,7 +60,19 @@ const tagService = {
      * @param id 标签ID
      * @returns Promise
      */
-    remove: async (id: string) => service.post(tagApi.remove, { _id: id })
+    remove: async (id: string): Promise<Tag> => service.post(tagApi.remove, { _id: id })
 };
 
 export default tagService;
+
+/**
+ * 标签
+ */
+export type Tag = {
+    /** ID */
+    _id: string;
+    /** 名称 */
+    name: string;
+    /** 描述 */
+    description: string;
+};

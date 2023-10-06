@@ -19,7 +19,7 @@ const menuData: MenuData[] = [
                 title: '分类管理',
                 icon: 'grid',
                 path: '/management/category',
-                component: () => import('@/views/common/404.vue')
+                component: () => import('@/views/admin/category/MoCategory.vue')
             },
             {
                 title: '标签管理',

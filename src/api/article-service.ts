@@ -91,9 +91,7 @@ const articleService = {
     /**
      * 获取文章列表
      *
-     * @param params 参数
-     * @param page 页码
-     * @param limit 每页数据条数
+     * @param params 获取文章列表参数
      */
     list: async (params: ArticleListParams): Promise<{ list: ArticleVO[]; total: number }> => {
         const _params: any = { ...params };
@@ -114,7 +112,7 @@ const articleService = {
     /**
      * 添加文章
      *
-     * @param params 参数
+     * @param params 添加文章参数
      */
     save: async (params: ArticleSaveParams): Promise<Article> => {
         const _params: any = { ...params };
@@ -125,7 +123,7 @@ const articleService = {
     /**
      * 更新文章
      *
-     * @param params 参数
+     * @param params 更新文章参数
      */
     update: async (params: ArticleUpdateParams): Promise<Article> => {
         const _params: any = { ...params };

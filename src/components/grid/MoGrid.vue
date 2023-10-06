@@ -8,6 +8,23 @@ import type { EditData, MoEditDialogConfig, MoEditDialogParams } from './compone
 /** 参数 */
 const props = defineProps<MoGridProps<T>>();
 
+/** 接口 */
+const api = computed<ApiParams<T>>(() => ({
+    add: () => {
+        throw new Error('未配置api的add方法');
+    },
+    remove: () => {
+        throw new Error('未配置api的remove方法');
+    },
+    removeBatch: () => {
+        throw new Error('未配置api的removeBatch方法');
+    },
+    update: () => {
+        throw new Error('未配置api的update方法');
+    },
+    ...props.api
+}));
+
 /** 表格元素对象 */
 const moTableRef = ref<MoTableInstance<T>>();
 
@@ -22,7 +39,7 @@ const editDialogParams = ref({}) as Ref<MoEditDialogParams<T>>;
 /** 当前页码 */
 const page = ref(1);
 /** 每页最大数据条数 */
-const pageSize = ref(props.pagination?.pageSize ?? 10);
+const limit = ref(props.pagination?.limit ?? 10);
 /** 总数据条数 */
 const tableTotal = ref(0);
 
@@ -45,10 +62,10 @@ const deleteEvent = (row: T) => {
         .then(() => (loading.value = true))
         .then(async () => {
             try {
-                await props.api.remove(row);
+                await api.value.remove!(row);
             } catch (error) {
                 process.env.VUE_APP_ENV !== 'production' && console.error(error);
-                ElMessage({ message: '删除失败！', type: 'error' });
+                ElMessage({ message: `删除失败！`, type: 'error' });
                 return;
             }
             ElMessage({ message: '删除成功！', type: 'success' });
@@ -74,7 +91,7 @@ const deleteBatchEvent = async () => {
                     ElMessage({ message: '至少选择一项!', type: 'warning' });
                 } else {
                     try {
-                        await props.api.removeBatch(rows);
+                        await api.value.removeBatch!(rows);
                     } catch (error) {
                         process.env.VUE_APP_ENV !== 'production' && console.error(error);
                         ElMessage({ message: '批量删除失败！', type: 'error' });
@@ -99,8 +116,8 @@ const pageChangeEvent = (value: number) => {
 };
 
 /** 每页最大数据条数修改事件 */
-const pageSizeChangeEvent = (value: number) => {
-    pageSize.value = value;
+const limitChangeEvent = (value: number) => {
+    limit.value = value;
     loadData();
 };
 
@@ -109,7 +126,7 @@ const confirmEvent = async (type: 'add' | 'update', editData: EditData<T>) => {
     loading.value = true;
     if (type === 'add') {
         try {
-            await props.api.add(editData);
+            await api.value.add!(editData);
             ElMessage({ message: '添加成功！', type: 'success' });
             page.value = 1;
         } catch (error) {
@@ -118,7 +135,7 @@ const confirmEvent = async (type: 'add' | 'update', editData: EditData<T>) => {
         }
     } else {
         try {
-            await props.api.update(editData);
+            await api.value.update!(editData);
             ElMessage({ message: '更新成功！', type: 'success' });
         } catch (error) {
             process.env.VUE_APP_ENV !== 'production' && console.error(error);
@@ -138,12 +155,12 @@ const confirmEvent = async (type: 'add' | 'update', editData: EditData<T>) => {
 async function loadData(searchData?: SearchData<T>) {
     loading.value = true;
     try {
-        const { data, total } = await props.api.list({
+        const { list, total } = await api.value.list({
             searchData,
             page: page.value,
-            pageSize: pageSize.value
+            limit: limit.value
         });
-        tableData.value = data;
+        tableData.value = list;
         tableTotal.value = total;
     } catch (error) {
         process.env.VUE_APP_ENV !== 'production' && console.error(error);
@@ -170,6 +187,22 @@ function openEditDialog(data?: T) {
 </script>
 <script lang="ts">
 /**
+ * API参数
+ */
+type ApiParams<T> = {
+    /** 获取数据列表 */
+    list: (params: ListApiParams<T>) => { list: T[]; total: number } | Promise<{ list: T[]; total: number }>;
+    /** 添加数据 */
+    add?: (data: EditData<T>) => Promise<void> | void;
+    /** 删除数据 */
+    remove?: (data: T) => Promise<void> | void;
+    /** 批量删除数据 */
+    removeBatch?: (datas: T[]) => Promise<void> | void;
+    /** 更新数据 */
+    update?: (data: EditData<T>) => Promise<void> | void;
+};
+
+/**
  * 获取数据列表参数
  */
 type ListApiParams<T> = {
@@ -178,7 +211,7 @@ type ListApiParams<T> = {
     /** 页码 */
     page: number;
     /** 每页最大数据条数 */
-    pageSize: number;
+    limit: number;
 };
 
 /**
@@ -194,23 +227,12 @@ export type MoGridProps<T extends Record<string, any>> = {
     /** 分页配置 */
     pagination?: {
         /** 每页最大数据条数 */
-        pageSize?: number;
+        limit?: number;
     };
     /** 编辑弹窗配置 */
     editDialog?: MoEditDialogConfig<T>;
     /** 接口 */
-    api: {
-        /** 获取数据列表 */
-        list: (params: ListApiParams<T>) => { data: T[]; total: number } | Promise<{ data: T[]; total: number }>;
-        /** 添加数据 */
-        add: (data: EditData<T>) => Promise<void> | void;
-        /** 删除数据 */
-        remove: (data: T) => Promise<void> | void;
-        /** 批量删除数据 */
-        removeBatch: (datas: T[]) => Promise<void> | void;
-        /** 更新数据 */
-        update: (data: EditData<T>) => Promise<void> | void;
-    };
+    api: ApiParams<T>;
 };
 </script>
 
@@ -236,10 +258,10 @@ export type MoGridProps<T extends Record<string, any>> = {
             <el-footer class="h-auto">
                 <mo-pagination
                     :page="page"
-                    :page-size="pageSize"
+                    :limit="limit"
                     :total="tableTotal"
                     @change="pageChangeEvent"
-                    @size-change="pageSizeChangeEvent"
+                    @size-change="limitChangeEvent"
                 />
             </el-footer>
         </el-container>

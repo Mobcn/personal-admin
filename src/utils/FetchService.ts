@@ -18,7 +18,7 @@ type ResponseData = Response & { data: any };
 /**
  * 请求参数
  */
-type RequestParams = { [x: string]: string | string[] };
+type RequestParams = { [x: string]: string | string[] | number | number[] | boolean };
 
 /**
  * 请求拦截器
@@ -226,9 +226,9 @@ export default class FetchService {
         const _url = new URL(url, 'http://localhost');
         for (const [key, value] of Object.entries(params)) {
             if (value instanceof Array) {
-                value.forEach((item) => _url.searchParams.append(key, item));
+                value.forEach((item) => _url.searchParams.append(key, String(item)));
             } else {
-                _url.searchParams.append(key, value);
+                _url.searchParams.append(key, String(value));
             }
         }
         return url.startsWith('http') ? _url.href : _url.href.replace('http://localhost', '');
