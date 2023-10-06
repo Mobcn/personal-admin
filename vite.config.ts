@@ -19,7 +19,7 @@ export default defineConfig({
         Unocss(),
         AutoImport({
             imports: ['vue'],
-            dirs: ['./src/api', './src/store', './src/utils'],
+            dirs: ['./src/api', './src/components/function', './src/store', './src/utils'],
             dts: './src/declare/auto-import.d.ts'
         }),
         Components({

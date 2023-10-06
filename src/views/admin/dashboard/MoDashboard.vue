@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import MoNavbar from './compoents/MoNavbar.vue';
 import MoSidebar from './compoents/MoSidebar.vue';
+import ContextMenu from '@imengyu/vue3-context-menu';
 import { getMenuItem } from '@/config/mo-sidebar';
 
 /**
@@ -15,6 +16,8 @@ type TabItem = {
     params?: any;
     /** 组件 */
     component: Component;
+    /** 销毁回调 */
+    onDestory?: () => void;
 };
 
 /** 菜单是否折叠 */
@@ -23,6 +26,81 @@ const isCollapse = ref(false);
 const currentTabValue = ref('');
 /** 标签数组 */
 const tabs = reactive<TabItem[]>([]);
+
+/** 标签栏元素对象 */
+const tabbarRef = ref();
+/** 当前右键标签值 */
+const tabbarValue = ref('');
+
+/**
+ * 显示标签右键菜单
+ *
+ * @param e 鼠标事件对象
+ * @param hiddens 隐藏的菜单项索引数组
+ */
+function showTabMenu(e: MouseEvent, hiddens?: number[]) {
+    const items = [
+        {
+            label: '关闭当前',
+            onClick: () => removeTab(tabbarValue.value)
+        },
+        {
+            label: '关闭左侧',
+            onClick: () => {
+                currentTabValue.value = tabbarValue.value;
+                const index = tabs.findIndex((tab) => tab._id === tabbarValue.value);
+                for (let i = 1; i < index; i++) {
+                    tabs[i].onDestory?.();
+                }
+                tabs.splice(1, index - 1);
+            }
+        },
+        {
+            label: '关闭右侧',
+            onClick: () => {
+                currentTabValue.value = tabbarValue.value;
+                const index = tabs.findIndex((tab) => tab._id === tabbarValue.value);
+                for (let i = tabs.length - 1; i > index; i--) {
+                    tabs[i].onDestory?.();
+                }
+                tabs.splice(index + 1);
+            }
+        },
+        {
+            label: '关闭其他',
+            onClick: () => {
+                currentTabValue.value = tabbarValue.value;
+                const index = tabs.findIndex((tab) => tab._id === tabbarValue.value);
+                for (let i = 1; i < tabs.length; i++) {
+                    i !== index && tabs[i].onDestory?.();
+                }
+                if (index === 0) {
+                    tabs.splice(1, tabs.length - 1);
+                } else {
+                    tabs.splice(index + 1);
+                    tabs.splice(1, index - 1);
+                }
+            }
+        },
+        {
+            label: '关闭全部',
+            onClick: () => {
+                currentTabValue.value = tabs[0]._id;
+                for (let i = 1; i < tabs.length; i++) {
+                    tabs[i].onDestory?.();
+                }
+                tabs.splice(1, tabs.length - 1);
+            }
+        }
+    ];
+    ContextMenu.showContextMenu({
+        theme: 'flat',
+        x: e.x + 8,
+        y: e.y + 14,
+        preserveIconWidth: false,
+        items: hiddens ? items.filter((_, index) => !hiddens.includes(index)) : items
+    });
+}
 
 /**
  * 打开标签页
@@ -48,13 +126,39 @@ function openTab(_id: string, title?: string, params?: any) {
         componentLike = componentLike.then((module) => module.default);
     }
     Promise.resolve(componentLike).then((component) => {
-        tabs.push({
+        const tab: TabItem = {
             _id,
             title: title || menuData.title,
             params,
             component: markRaw(component)
-        });
+        };
+        tabs.push(tab);
         currentTabValue.value = _id;
+
+        // 设置监听标签右键菜单
+        nextTick(() => {
+            const element: HTMLElement = tabbarRef.value[tabs.length - 1];
+            const tabbar = element.parentElement as HTMLElement;
+            const onContextmenu = function (e: MouseEvent) {
+                e.preventDefault();
+                tabbarValue.value = _id;
+                if (tabs.length > 1) {
+                    if (tabs[0]._id === _id) {
+                        showTabMenu(e, [0, 1, 4]);
+                    } else if (tabs[tabs.length - 1]._id === _id) {
+                        if (tabs[1]._id === _id) {
+                            showTabMenu(e, [1, 2, 3, 4]);
+                        } else {
+                            showTabMenu(e, [2]);
+                        }
+                    } else {
+                        showTabMenu(e);
+                    }
+                }
+            };
+            tabbar.addEventListener('contextmenu', onContextmenu);
+            tab.onDestory = () => tabbar.removeEventListener('contextmenu', onContextmenu);
+        });
     });
 }
 
@@ -77,6 +181,7 @@ function removeTab(_id: string | number) {
     }
     currentTabValue.value = active;
     const removeIndex = tabs.findIndex((tab) => tab._id === _id);
+    tabs[removeIndex].onDestory?.();
     tabs.splice(removeIndex, 1);
 }
 
@@ -126,7 +231,10 @@ export type OpenTabFunction = (_id: string, title?: string) => void;
                     closable
                     @tab-remove="removeTab"
                 >
-                    <el-tab-pane v-for="item in tabs" :key="item._id" :label="item.title" :name="item._id">
+                    <el-tab-pane v-for="item in tabs" :key="item._id" :name="item._id">
+                        <template #label>
+                            <span ref="tabbarRef">{{ item.title }}</span>
+                        </template>
                         <el-scrollbar class="mo-dashboard__scrollbar">
                             <component :is="item.component" :params="item.params" />
                         </el-scrollbar>
