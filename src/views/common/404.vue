@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import storage from '@/utils/storage.ts';
-
 // 404图片路径
 const _404ImagePath = storage.get('_404ImageURL') || '/img/404.png';
 

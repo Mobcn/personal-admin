@@ -50,7 +50,9 @@ const userService = {
      * @param username 用户名
      * @param password 密码
      */
-    login: async (username: string, password: string) => service.post(userApi.login, { username, password }),
+    login: async (username: string, password: string): Promise<{ token: string }> => {
+        return await service.post(userApi.login, { username, password });
+    },
 
     /**
      * 销毁

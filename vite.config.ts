@@ -62,5 +62,14 @@ export default defineConfig({
     base: './',
     define: {
         'process.env': { VUE_APP_ENV: NODE_ENV }
+    },
+    server: {
+        proxy: {
+            '/blog': {
+                target: 'http://localhost:3000',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api/, '')
+            }
+        }
     }
 });

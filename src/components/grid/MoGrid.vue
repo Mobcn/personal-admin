@@ -1,9 +1,9 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
+import { ElMessage, ElMessageBox } from 'element-plus';
 import type { MoSearchProps, SearchData } from './components/MoSearch.vue';
 import type { MoToolbarProps } from './components/MoToolbar.vue';
 import type { MoTableProps, MoTableInstance } from './components/MoTable.vue';
 import type { EditData, MoEditDialogConfig, MoEditDialogParams } from './components/MoEditDialog.vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
 
 /** 参数 */
 const props = defineProps<MoGridProps<T>>();
@@ -37,7 +37,7 @@ const searchEvent = async (searchData: SearchData<T>) => {
 
 /** 删除事件 */
 const deleteEvent = (row: T) => {
-    ElMessageBox.confirm(`确定要删除吗?`, '系统提示', {
+    ElMessageBox.confirm('确定要删除吗?', '系统提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -62,7 +62,7 @@ const deleteEvent = (row: T) => {
 const deleteBatchEvent = async () => {
     const $table = moTableRef.value;
     if ($table) {
-        ElMessageBox.confirm(`确定要批量删除选择项吗?`, '系统提示', {
+        ElMessageBox.confirm('确定要批量删除选择项吗?', '系统提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'

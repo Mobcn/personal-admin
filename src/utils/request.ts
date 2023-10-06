@@ -6,7 +6,7 @@ const refreshURL = '/blog/user/login';
 
 // 创建一个fetch服务实例
 const service = FetchService.create({
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:5173',
     timeout: 5000
 });
 
@@ -16,7 +16,7 @@ service.addRequestInterceptor((_url, options) => {
     if (token) {
         // 配置登录认证token
         options.headers = new Headers(options.headers);
-        options.headers.append('Authorization', 'Bearer ' + token);
+        options.headers.set('Authorization', 'Bearer ' + token);
     }
 });
 
@@ -39,8 +39,9 @@ service.setResponseErrorInterceptor(async (response, options) => {
         throw new Error(response.statusText);
     }
     // 刷新token
-    let responseData = await service.post(refreshURL);
-    storage.set('token', responseData.data.token);
+    let { token } = await service.post(refreshURL);
+    storage.set('token', token);
+
     // 重试
     // @ts-ignore
     return await service[options.method!.toLowerCase()](response.url, undefined, options);

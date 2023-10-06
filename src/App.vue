@@ -1,19 +1,43 @@
 <script setup lang="ts">
-import { markRaw, ref } from 'vue';
-import type { Component } from 'vue';
-
-// 当前子组件
+/** 当前子组件 */
 const currentComponent = ref<Component | null>(null);
+
+/**
+ * 页面修改
+ *
+ * @param page 页面组件
+ * @param params 页面组件参数
+ */
+async function changePage(page: Promise<{ default: Component }> | Component) {
+    if (page instanceof Promise) {
+        currentComponent.value = markRaw((await page).default);
+    } else {
+        currentComponent.value = page;
+    }
+}
+
+// 提供页面修改的方法
+provide('changePage', changePage);
 
 // 初始化操作
 (async () => {
     try {
-        currentComponent.value = markRaw((await import('@/views/admin/dashboard/MoDashboard.vue')).default);
+        if (storage.get('token')) {
+            changePage(import('@/views/admin/dashboard/MoDashboard.vue'));
+        } else {
+            changePage(import('@/views/common/Login.vue'));
+        }
     } catch (error) {
-        console.log(error);
-        currentComponent.value = markRaw((await import('@/views/common/404.vue')).default);
+        process.env.VUE_APP_ENV !== 'production' && console.error(error);
+        changePage(import('@/views/common/404.vue'));
     }
 })();
+</script>
+<script lang="ts">
+/**
+ * 页面修改
+ */
+export type ProvideChangePage = (page: Promise<{ default: Component }> | Component) => void;
 </script>
 
 <template>
