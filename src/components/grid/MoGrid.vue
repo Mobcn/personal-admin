@@ -28,13 +28,11 @@ const api = computed<ApiParams<T>>(() => ({
 /** 表格元素对象 */
 const moTableRef = ref<MoTableInstance<T>>();
 
+/** 历史查询数据 */
+const oldSearchData = ref<SearchData<T>>();
+
 /** 表格数据 */
 const tableData = ref([]) as Ref<T[]>;
-
-/** 编辑弹窗是否显示 */
-const editDialogVisible = ref(false);
-/** 编辑弹窗数据参数 */
-const editDialogParams = ref({}) as Ref<MoEditDialogParams<T>>;
 
 /** 当前页码 */
 const page = ref(1);
@@ -43,12 +41,18 @@ const limit = ref(props.pagination?.limit ?? 10);
 /** 总数据条数 */
 const tableTotal = ref(0);
 
+/** 编辑弹窗是否显示 */
+const editDialogVisible = ref(false);
+/** 编辑弹窗数据参数 */
+const editDialogParams = ref({}) as Ref<MoEditDialogParams<T>>;
+
 /** 是否加载中 */
 const loading = ref(false);
 
 /** 查询事件 */
 const searchEvent = async (searchData: SearchData<T>) => {
     page.value = 1;
+    oldSearchData.value = searchData;
     loadData(searchData);
 };
 
@@ -152,8 +156,11 @@ const confirmEvent = async (type: 'add' | 'update', editData: EditData<T>) => {
  *
  * @param searchData 查询数据
  */
-async function loadData(searchData?: SearchData<T>) {
+async function loadData(searchData?: SearchData<T> | boolean) {
     loading.value = true;
+    if (typeof searchData === 'boolean') {
+        searchData = searchData ? oldSearchData.value : undefined;
+    }
     try {
         const { list, total } = await api.value.list({
             searchData,
@@ -247,7 +254,12 @@ export type MoGridProps<T extends Record<string, any>> = {
         </el-header>
         <el-container>
             <el-header v-if="props.toolbar" class="h-auto pt-3">
-                <mo-toolbar v-bind="props.toolbar" @add="openEditDialog" @delete-batch="deleteBatchEvent" />
+                <mo-toolbar
+                    v-bind="props.toolbar"
+                    @add="openEditDialog"
+                    @delete-batch="deleteBatchEvent"
+                    @refresh="loadData(true)"
+                />
             </el-header>
             <el-main class="pt-3">
                 <mo-table
