@@ -251,7 +251,6 @@ export type OpenTabFunction = (_id: string, title?: string) => void;
     display: flex;
     flex-flow: column;
     height: 100%;
-    border-radius: 0.5rem;
 }
 
 .mo-dashboard__tabs.el-tabs :deep(.el-tabs__content) {

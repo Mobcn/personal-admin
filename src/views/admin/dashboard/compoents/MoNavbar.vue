@@ -3,27 +3,10 @@ import MoIcon from '@/components/icons/MoIcon.vue';
 import { ElMessageBox } from 'element-plus';
 import type { ProvideChangePage } from '@/App.vue';
 
-/**
- * 太阳图标
- */
-const Sun = defineComponent({
-    name: 'Sun',
-    components: { MoIcon },
-    setup() {
-        return () => h(MoIcon, { iconName: 'brightness-high-fill', fill: '#606266' });
-    }
-});
-
-/**
- * 月亮图标
- */
-const Moon = defineComponent({
-    name: 'Moon',
-    components: { MoIcon },
-    setup() {
-        return () => h(MoIcon, { class: 'bg-#141414 rounded-full scale-120', iconName: 'moon-fill', fill: '#cfd3dc' });
-    }
-});
+/** 太阳图标 */
+const Sun: Component = () => h(MoIcon, { iconName: 'brightness-high-fill', fill: '#606266' });
+/** 月亮图标 */
+const Moon: Component = () => h(MoIcon, { iconName: 'moon-fill', fill: '#cfd3dc' });
 
 /** 参数 */
 const props = defineProps<{
@@ -128,6 +111,10 @@ function exit() {
 
 .el-switch :deep(.el-switch__core .el-switch__action) {
     transition: all var(--el-transition-duration) !important;
+}
+
+.el-switch :deep(.el-switch__core .el-switch__action) {
+    background-color: var(--el-bg-color);
 }
 
 .el-switch.is-checked :deep(.el-switch__core) {
