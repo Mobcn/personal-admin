@@ -11,15 +11,19 @@ const props = defineProps<MoGridProps<T>>();
 /** 接口 */
 const api = computed<ApiParams<T>>(() => ({
     add: () => {
+        ElMessage({ message: '未配置api的add方法', type: 'error' });
         throw new Error('未配置api的add方法');
     },
     remove: () => {
+        ElMessage({ message: '未配置api的remove方法', type: 'error' });
         throw new Error('未配置api的remove方法');
     },
     removeBatch: () => {
+        ElMessage({ message: '未配置api的removeBatch方法', type: 'error' });
         throw new Error('未配置api的removeBatch方法');
     },
     update: () => {
+        ElMessage({ message: '未配置api的update方法', type: 'error' });
         throw new Error('未配置api的update方法');
     },
     ...props.api
@@ -182,6 +186,7 @@ async function loadData(searchData?: SearchData<T> | boolean) {
  */
 function openEditDialog(data?: T) {
     if (!props.editDialog) {
+        ElMessage({ message: '未配置编辑弹窗', type: 'error' });
         throw new Error('未配置编辑弹窗');
     }
     editDialogParams.value = { data };
