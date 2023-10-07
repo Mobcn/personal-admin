@@ -44,7 +44,10 @@ export default defineConfig({
                     name: 'element-plus',
                     var: 'ElementPlus',
                     path: 'https://cdn.staticfile.org/element-plus/2.3.14/index.full.min.js',
-                    css: 'https://cdn.staticfile.org/element-plus/2.3.14/index.css'
+                    css: [
+                        'https://cdn.staticfile.org/element-plus/2.3.14/index.css',
+                        'https://registry.npmmirror.com/element-plus/2.3.14/files/theme-chalk/dark/css-vars.css'
+                    ]
                 },
                 {
                     name: 'element-plus/dist/locale/zh-cn.min.mjs',

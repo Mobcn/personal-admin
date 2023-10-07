@@ -1,6 +1,29 @@
 <script setup lang="ts">
+import MoIcon from '@/components/icons/MoIcon.vue';
 import { ElMessageBox } from 'element-plus';
 import type { ProvideChangePage } from '@/App.vue';
+
+/**
+ * 太阳图标
+ */
+const Sun = defineComponent({
+    name: 'Sun',
+    components: { MoIcon },
+    setup() {
+        return () => h(MoIcon, { iconName: 'brightness-high-fill', fill: '#606266' });
+    }
+});
+
+/**
+ * 月亮图标
+ */
+const Moon = defineComponent({
+    name: 'Moon',
+    components: { MoIcon },
+    setup() {
+        return () => h(MoIcon, { class: 'bg-#141414 rounded-full scale-120', iconName: 'moon-fill', fill: '#cfd3dc' });
+    }
+});
 
 /** 参数 */
 const props = defineProps<{
@@ -14,10 +37,19 @@ const emits = defineEmits<{
     switchClick: [state: boolean];
 }>();
 
+/** 主题开关 */
+const themeSwitch = ref(false);
+
 /** 页面修改 */
 const changePage = inject<ProvideChangePage>('changePage', () => {
     throw new Error('找不到changePage方法');
 });
+
+/** 切换主题 */
+function switchTheme() {
+    const html = document.querySelector('html');
+    html && (html.className = themeSwitch.value ? 'dark' : 'light');
+}
 
 /**
  * 退出登录
@@ -45,14 +77,27 @@ function exit() {
             height="20px"
             @click="emits('switchClick', !props.switch)"
         ></mo-icon>
-        <mo-icon
-            class="p-3.75 hover:bg-mask-1 hover:cursor-pointer"
-            icon-name="box-arrow-right"
-            width="20px"
-            height="20px"
-            @click="exit"
-        ></mo-icon>
+        <div class="flex items-center gap-1">
+            <el-switch
+                v-model="themeSwitch"
+                @change="switchTheme"
+                :active-action-icon="Moon"
+                :inactive-action-icon="Sun"
+            />
+            <mo-icon
+                class="p-3.75 hover:bg-mask-1 hover:cursor-pointer"
+                icon-name="box-arrow-right"
+                width="20px"
+                height="20px"
+                @click="exit"
+            ></mo-icon>
+        </div>
     </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.el-switch.is-checked :deep(.el-switch__core) {
+    border-color: #4c4d4f;
+    background-color: #2c2c2c;
+}
+</style>
