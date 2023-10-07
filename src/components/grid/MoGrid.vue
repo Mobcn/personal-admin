@@ -174,6 +174,9 @@ async function loadData(searchData?: SearchData<T>) {
  * 打开编辑弹窗
  */
 function openEditDialog(data?: T) {
+    if (!props.editDialog) {
+        throw new Error('未配置编辑弹窗');
+    }
     editDialogParams.value = { data };
     editDialogVisible.value = true;
 }

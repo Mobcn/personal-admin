@@ -107,7 +107,7 @@ export type MoTableInstance<T> = ComponentPublicInstance<
                         <mo-icon icon-name="pencil-square" />
                     </el-icon>
                     <el-icon
-                        v-if="operation === 'delete'"
+                        v-else-if="operation === 'delete'"
                         class="hover:cursor-pointer hover:color-primary"
                         @click="emits('delete', { ...row })"
                     >

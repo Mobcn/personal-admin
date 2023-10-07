@@ -181,7 +181,7 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
                         :placeholder="component.placeholder"
                     />
                     <el-select
-                        v-if="component.type === 'select'"
+                        v-else-if="component.type === 'select'"
                         v-model="formData[component.name]"
                         :multiple="component.multiple"
                         :size="component.size"
@@ -196,14 +196,14 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
                         ></el-option>
                     </el-select>
                     <el-time-picker
-                        v-if="component.type === 'time'"
+                        v-else-if="component.type === 'time'"
                         v-model="(formData[component.name] as string | [string, string])"
                         :is-range="component.isRange"
                         :size="component.size"
                         :placeholder="component.placeholder"
                     />
                     <el-date-picker
-                        v-if="
+                        v-else-if="
                             component.type === 'year' ||
                             component.type === 'month' ||
                             component.type === 'date' ||

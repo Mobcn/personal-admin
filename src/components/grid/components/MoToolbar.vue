@@ -31,7 +31,12 @@ export type MoToolbarProps = {
                 </template>
                 <span>{{ '添加' }}</span>
             </el-button>
-            <el-button v-if="item === 'deleteBatch'" type="danger" :size="props.size" @click="emits('deleteBatch')">
+            <el-button
+                v-else-if="item === 'deleteBatch'"
+                type="danger"
+                :size="props.size"
+                @click="emits('deleteBatch')"
+            >
                 <template #icon>
                     <el-icon><mo-icon icon-name="trash3"></mo-icon></el-icon>
                 </template>
