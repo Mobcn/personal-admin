@@ -37,6 +37,9 @@ const emits = defineEmits<{
     switchClick: [state: boolean];
 }>();
 
+/** div元素对象 */
+const divRef = ref();
+
 /** 主题开关 */
 const themeSwitch = ref(false);
 
@@ -45,8 +48,27 @@ const changePage = inject<ProvideChangePage>('changePage', () => {
     throw new Error('找不到changePage方法');
 });
 
-/** 切换主题 */
+/**
+ * 切换主题
+ */
 function switchTheme() {
+    // 全局禁止动画过渡
+    const style = document.createElement('style');
+    style.innerHTML = '* { transition: none !important; }';
+    document.head.appendChild(style);
+    const callbackTransitionend = (e: TransitionEvent) => {
+        if (
+            e.propertyName === 'background-color' &&
+            e.target instanceof HTMLElement &&
+            e.target.className === 'el-switch__core'
+        ) {
+            document.head.removeChild(style);
+            divRef.value.removeEventListener('transitionend', callbackTransitionend);
+        }
+    };
+    divRef.value.addEventListener('transitionend', callbackTransitionend);
+
+    // 切换主题
     const html = document.querySelector('html');
     html && (html.className = themeSwitch.value ? 'dark' : 'light');
 }
@@ -77,7 +99,7 @@ function exit() {
             height="20px"
             @click="emits('switchClick', !props.switch)"
         ></mo-icon>
-        <div class="flex items-center gap-1">
+        <div ref="divRef" class="flex items-center gap-1">
             <el-switch
                 v-model="themeSwitch"
                 @change="switchTheme"
@@ -96,6 +118,14 @@ function exit() {
 </template>
 
 <style scoped>
+.el-switch :deep(.el-switch__core) {
+    transition: border-color var(--el-transition-duration), background-color var(--el-transition-duration) !important;
+}
+
+.el-switch :deep(.el-switch__core .el-switch__action) {
+    transition: all var(--el-transition-duration) !important;
+}
+
 .el-switch.is-checked :deep(.el-switch__core) {
     border-color: #4c4d4f;
     background-color: #2c2c2c;
