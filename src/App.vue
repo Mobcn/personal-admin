@@ -21,6 +21,11 @@ provide('changePage', changePage);
 
 // 初始化操作
 (async () => {
+    // 设置主题
+    if (storage.get('mo-theme') === 'dark') {
+        document.querySelector('html')?.classList.add('dark');
+    }
+
     try {
         if (storage.get('token')) {
             changePage(import('@/views/admin/dashboard/MoDashboard.vue'));
