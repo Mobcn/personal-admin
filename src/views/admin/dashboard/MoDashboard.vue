@@ -94,9 +94,10 @@ function showTabMenu(e: MouseEvent, hiddens?: number[]) {
         }
     ];
     ContextMenu.showContextMenu({
-        theme: 'flat',
         x: e.x + 8,
         y: e.y + 14,
+        theme: document.querySelector('html')?.className === 'dark' ? 'flat dark' : 'flat',
+        zIndex: 3500,
         preserveIconWidth: false,
         items: hiddens ? items.filter((_, index) => !hiddens.includes(index)) : items
     });

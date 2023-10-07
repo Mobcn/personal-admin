@@ -57,4 +57,39 @@ export type ProvideChangePage = (page: Promise<{ default: Component }> | Compone
 ::-webkit-scrollbar-track {
     border-radius: 10px;
 }
+
+/* 黑暗主题按钮配置 */
+html.dark .el-button {
+    --el-button-active-text-color: var(--el-color-white);
+}
+html.dark .el-button--primary {
+    --el-button-bg-color: var(--el-color-primary-light-9);
+    --el-button-border-color: var(--el-color-primary-light-5);
+    --el-button-hover-bg-color: var(--el-color-primary);
+    --el-button-hover-border-color: var(--el-color-primary);
+}
+html.dark .el-button--success {
+    --el-button-bg-color: var(--el-color-success-light-9);
+    --el-button-border-color: var(--el-color-success-light-5);
+    --el-button-hover-bg-color: var(--el-color-success);
+    --el-button-hover-border-color: var(--el-color-success);
+}
+html.dark .el-button--info {
+    --el-button-bg-color: var(--el-color-info-light-9);
+    --el-button-border-color: var(--el-color-info-light-5);
+    --el-button-hover-bg-color: var(--el-color-info);
+    --el-button-hover-border-color: var(--el-color-info);
+}
+html.dark .el-button--warning {
+    --el-button-bg-color: var(--el-color-warning-light-9);
+    --el-button-border-color: var(--el-color-warning-light-5);
+    --el-button-hover-bg-color: var(--el-color-warning);
+    --el-button-hover-border-color: var(--el-color-warning);
+}
+html.dark .el-button--danger {
+    --el-button-bg-color: var(--el-color-danger-light-9);
+    --el-button-border-color: var(--el-color-danger-light-5);
+    --el-button-hover-bg-color: var(--el-color-danger);
+    --el-button-hover-border-color: var(--el-color-danger);
+}
 </style>
