@@ -7,6 +7,7 @@ export {}
 declare global {
   const EffectScope: typeof import('vue')['EffectScope']
   const FetchService: typeof import('../utils/FetchService')['default']
+  const ShowImage: typeof import('../components/function/ShowImage')['default']
   const articleApi: typeof import('../api/article-service')['articleApi']
   const articleService: typeof import('../api/article-service')['default']
   const categoryApi: typeof import('../api/category-service')['categoryApi']
