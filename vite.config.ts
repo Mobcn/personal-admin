@@ -69,7 +69,7 @@ export default defineConfig({
     server: {
         proxy: {
             '/blog': {
-                target: 'http://localhost:3000',
+                target: 'https://api.mobingc.cn',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api/, '')
             }

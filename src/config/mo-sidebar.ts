@@ -12,20 +12,26 @@ const menuData: MenuData[] = [
         component: () => import('@/views/admin/home/MoHome.vue')
     },
     {
+        title: '发布文章',
+        icon: 'lightbulb-fill',
+        path: '/publish',
+        component: () => import('@/views/admin/publish/ArticleEdit.vue')
+    },
+    {
         title: '内容管理',
-        icon: 'x-diamond-fill',
+        icon: 'box-fill',
         subMenu: [
             {
                 title: '分类管理',
                 icon: 'grid',
                 path: '/management/category',
-                component: () => import('@/views/admin/category/MoCategory.vue')
+                component: () => import('@/views/admin/management/category/MoCategory.vue')
             },
             {
                 title: '标签管理',
                 icon: 'tags',
                 path: '/management/tag',
-                component: () => import('@/views/admin/tag/MoTag.vue')
+                component: () => import('@/views/admin/management/tag/MoTag.vue')
             }
         ]
     }

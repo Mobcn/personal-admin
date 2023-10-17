@@ -24,7 +24,7 @@ const emits = defineEmits<{
 const divRef = ref();
 
 /** 主题开关 */
-const themeSwitch = ref(document.querySelector('html')?.classList.contains('dark') === true);
+const themeSwitch = ref(store.theme === 'dark');
 
 /** 页面修改 */
 const changePage = inject<ProvideChangePage>('changePage', () => {
@@ -52,12 +52,7 @@ function switchTheme() {
     divRef.value.addEventListener('transitionend', callbackTransitionend);
 
     // 切换主题
-    const html = document.querySelector('html');
-    if (html) {
-        html.classList.remove(themeSwitch.value ? 'light' : 'dark');
-        html.classList.add(themeSwitch.value ? 'dark' : 'light');
-        storage.set('mo-theme', themeSwitch.value ? 'dark' : 'light');
-    }
+    store.theme = themeSwitch.value ? 'dark' : 'light';
 }
 
 /**

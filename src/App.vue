@@ -22,9 +22,7 @@ provide('changePage', changePage);
 // 初始化操作
 (async () => {
     // 设置主题
-    if (storage.get('mo-theme') === 'dark') {
-        document.querySelector('html')?.classList.add('dark');
-    }
+    storage.get('mo-theme') === 'dark' && (store.theme = 'dark');
 
     try {
         if (storage.get('token')) {
