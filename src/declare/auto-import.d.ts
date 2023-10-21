@@ -10,6 +10,8 @@ declare global {
   const ShowImage: typeof import('../components/function/ShowImage')['default']
   const articleApi: typeof import('../api/article-service')['articleApi']
   const articleService: typeof import('../api/article-service')['default']
+  const autoApi: typeof import('../api/auto-api-service')['autoApi']
+  const autoApiService: typeof import('../api/auto-api-service')['default']
   const categoryApi: typeof import('../api/category-service')['categoryApi']
   const categoryService: typeof import('../api/category-service')['default']
   const computed: typeof import('vue')['computed']

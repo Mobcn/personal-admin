@@ -39,9 +39,9 @@ type OperationEnum = 'edit' | 'delete';
 /**
  * 表格列
  */
-type MoTableColumn<T extends string> = {
+type MoTableColumn<T> = {
     /** 字段名 */
-    prop: T;
+    prop: keyof T & string;
     /** 标题 */
     label?: string;
     /** 宽度 */
@@ -52,6 +52,8 @@ type MoTableColumn<T extends string> = {
     align?: AlignEnum;
     /** 表头对齐方式 */
     headerAlign?: AlignEnum;
+    /** 显示格式化 */
+    format?: (row: T) => string;
 };
 
 /**
@@ -61,7 +63,7 @@ export type MoTableProps<T> = {
     /** 表格数据 */
     data: T[];
     /** 列配置 */
-    columns: MoTableColumn<keyof T & string>[];
+    columns: MoTableColumn<T>[];
     /** 操作 */
     operations?: OperationEnum[];
     /** 对齐方式 */
@@ -95,7 +97,11 @@ export type MoTableInstance<T> = ComponentPublicInstance<
             :align="column.align ?? props.align"
             :header-align="column.headerAlign ?? props.headerAlign"
             show-overflow-tooltip
-        />
+        >
+            <template #default="{ row }: { row: T }">
+                <span>{{ column.format ? column.format(row) : row[column.prop] }}</span>
+            </template>
+        </el-table-column>
         <el-table-column v-if="props.operations?.length" label="操作" :align="props.headerAlign" width="100">
             <template #default="{ row }: { row: T }">
                 <template v-for="operation in props.operations">
@@ -108,7 +114,7 @@ export type MoTableInstance<T> = ComponentPublicInstance<
                     </el-icon>
                     <el-icon
                         v-else-if="operation === 'delete'"
-                        class="hover:cursor-pointer hover:color-primary"
+                        class="hover:cursor-pointer hover:color-primary mr-2"
                         @click="emits('delete', { ...row })"
                     >
                         <mo-icon icon-name="trash3" />

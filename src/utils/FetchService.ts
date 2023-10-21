@@ -90,7 +90,7 @@ export default class FetchService {
      * @param body 请求体
      * @param options 请求设置参数
      */
-    async post(url: string, body?: string | RequestParams | FormData, options?: RequestOptions) {
+    async post(url: string, body?: string | Record<string, any> | RequestParams | FormData, options?: RequestOptions) {
         return this._request(url, body, { ...options, method: 'POST' });
     }
 
@@ -145,7 +145,11 @@ export default class FetchService {
      * @param body 请求体
      * @param options 请求设置参数
      */
-    private async _request(url: string, body?: string | RequestParams | FormData, options?: RequestOptions) {
+    private async _request(
+        url: string,
+        body?: string | Record<string, any> | RequestParams | FormData,
+        options?: RequestOptions
+    ) {
         const _options: RequestOptions = { ...this.defaultOptions, body, ...options };
         await this.runRequestInterceptors(url, _options);
         if (typeof body === 'object') {

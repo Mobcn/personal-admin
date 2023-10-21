@@ -26,13 +26,24 @@ watchEffect(() => {
     const data: any = { [primaryKey.value]: props.params.data?.[primaryKey.value] ?? '' };
     if (props.params.data) {
         props.config.components.forEach((component) => {
-            const value: any = props.params.data![component.name];
-            if (value == null) {
-                data[component.name] = '';
-            } else if (value instanceof Date) {
-                data[component.name] = value.toISOString();
+            let value: any = props.params.data![component.name];
+            if (
+                (component.type === 'select' && component.multiple) ||
+                (component.type === 'time' && component.isRange)
+            ) {
+                data[component.name] = typeof value === 'string' ? (value ? value.split(',') : []) : value;
             } else {
-                data[component.name] = value.toString();
+                data[component.name] = convertToString(value);
+            }
+        });
+    } else if (props.config.initData) {
+        const initData = typeof props.config.initData === 'function' ? props.config.initData() : props.config.initData;
+        props.config.components.forEach((component) => {
+            let value: any = initData[component.name];
+            if ('multiple' in component && component.multiple) {
+                data[component.name] = typeof value === 'string' ? value.split(',') : value;
+            } else {
+                data[component.name] = convertToString(value);
             }
         });
     } else {
@@ -40,6 +51,9 @@ watchEffect(() => {
     }
     formData.value = data;
 });
+
+// 自定义监听数据变化方法
+props.config.watch?.forEach((watchFun) => watchEffect(() => watchFun(formData)));
 
 /** 确定点击事件 */
 const confirmClickEvent = () => {
@@ -52,13 +66,8 @@ const confirmClickEvent = () => {
                 const data = {} as any;
                 for (const key in formData.value) {
                     const value: any = formData.value[key];
-                    if (!value) {
-                        continue;
-                    }
-                    if (value instanceof Date) {
-                        data[key] = new Date(value).toISOString();
-                    } else {
-                        value && (data[key] = value);
+                    if (value != null) {
+                        data[key] = convertToString(value);
                     }
                 }
                 valid && emits('confirm', type, data);
@@ -66,8 +75,71 @@ const confirmClickEvent = () => {
         });
     }
 };
+
+/**
+ * 加载选择项
+ *
+ * @param options 选项数据
+ */
+const loadOptions = (() => {
+    const optionsCache = new Map<SelectOptionsLoad<T>, SelectItem[]>();
+    return (options: SelectItem[] | SelectOptionsLoad<T>) => {
+        if (typeof options !== 'function') {
+            return options;
+        }
+        if (!optionsCache.has(options)) {
+            const reactiveOptions = reactive<SelectItem[]>([]);
+            optionsCache.set(options, reactiveOptions);
+            watchEffect(async () => {
+                const res = options(formData);
+                const list = await Promise.resolve(res);
+                reactiveOptions.splice(0);
+                reactiveOptions.push(...list);
+            });
+        }
+        return optionsCache.get(options)!;
+    };
+})();
+
+/**
+ * 获取组件宽度样式
+ */
+function getWidthStyle(width: string | number) {
+    return typeof width === 'number' ? `${width}px` : width;
+}
+
+/**
+ * 转换字符串
+ */
+function convertToString(value: any): string {
+    if (value == null) {
+        return '';
+    }
+    if (value instanceof Array) {
+        return value.map(convertToString).join(',');
+    }
+    if (value instanceof Date) {
+        return value.toISOString();
+    }
+    return value.toString();
+}
 </script>
 <script lang="ts">
+/** 选择项 */
+type SelectItem = {
+    /** 值 */
+    value: string | number;
+    /** 显示 */
+    label: string;
+};
+
+/**
+ * 选择项加载函数
+ */
+type SelectOptionsLoad<T extends Record<string, any>> = (
+    editDataRef: Ref<EditData<T>>
+) => SelectItem[] | Promise<SelectItem[]>;
+
 /**
  * 编辑弹窗组件项
  */
@@ -78,8 +150,14 @@ type MoEditDialogComponent<T extends Record<string, any>> = {
     label?: string;
     /** 组件大小 */
     size?: 'default' | 'small' | 'large';
+    /** 组件宽度 */
+    width?: string | number;
     /** 占位内容 */
     placeholder?: string;
+    /** 是否可视 */
+    visible?: (editData: EditData<T>) => boolean;
+    /** 是否禁用 */
+    disabled?: (editData: EditData<T>) => boolean;
 } & (
     | {
           /** 组件类型 */
@@ -87,9 +165,15 @@ type MoEditDialogComponent<T extends Record<string, any>> = {
       }
     | {
           /** 组件类型 */
+          type: 'textarea';
+          /** 文本域高度 */
+          rows: number;
+      }
+    | {
+          /** 组件类型 */
           type: 'select';
           /** 选择项 */
-          options: { value: string; label: string }[];
+          options: SelectItem[] | SelectOptionsLoad<T>;
           /** 是否多选 */
           multiple?: boolean;
       }
@@ -130,6 +214,10 @@ export type MoEditDialogConfig<T extends Record<string, any>> = {
     size?: 'default' | 'small' | 'large';
     /** 标签宽度 */
     labelWidth?: number | string;
+    /** 数据监听方法数组 */
+    watch?: ((editDataRef: Ref<EditData<T>>) => void)[];
+    /** 初始化数据 */
+    initData?: { [P in keyof T]?: T[P] } | (() => { [P in keyof T]?: T[P] });
 };
 
 /**
@@ -167,29 +255,44 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
             :size="props.config.size"
             :label-width="props.config.labelWidth"
         >
-            <el-form-item
-                v-for="(component, index) in props.config.components"
-                :key="index"
-                :prop="component.name"
-                :label="component.label"
-            >
-                <template v-if="component.name !== primaryKey">
+            <template v-for="component in props.config.components">
+                <el-form-item
+                    v-if="component.name !== primaryKey"
+                    v-show="!component.visible || component.visible(formData)"
+                    :prop="component.name"
+                    :label="component.label"
+                >
                     <el-input
                         v-if="component.type === 'input'"
                         v-model="(formData[component.name] as string)"
                         :size="component.size"
+                        :style="component.width ? `width: ${getWidthStyle(component.width)}` : ''"
                         :placeholder="component.placeholder"
+                        :disabled="component.disabled && component.disabled(formData)"
+                    />
+                    <el-input
+                        v-else-if="component.type === 'textarea'"
+                        v-model="(formData[component.name] as string)"
+                        type="textarea"
+                        :rows="component.rows"
+                        :size="component.size"
+                        :style="component.width ? `width: ${getWidthStyle(component.width)}` : ''"
+                        :placeholder="component.placeholder"
+                        :disabled="component.disabled && component.disabled(formData)"
                     />
                     <el-select
                         v-else-if="component.type === 'select'"
                         v-model="formData[component.name]"
                         :multiple="component.multiple"
                         :size="component.size"
+                        :style="component.width ? `width: ${getWidthStyle(component.width)}` : ''"
                         :placeholder="component.placeholder"
+                        :loading="loadOptions(component.options).length <= 0"
                         clearable
+                        :disabled="component.disabled && component.disabled(formData)"
                     >
                         <el-option
-                            v-for="(item, index) in component.options"
+                            v-for="(item, index) in loadOptions(component.options)"
                             :key="index"
                             :value="item.value"
                             :label="item.label"
@@ -200,7 +303,9 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
                         v-model="(formData[component.name] as string | [string, string])"
                         :is-range="component.isRange"
                         :size="component.size"
+                        :style="component.width ? `width: ${getWidthStyle(component.width)}` : ''"
                         :placeholder="component.placeholder"
+                        :disabled="component.disabled && component.disabled(formData)"
                     />
                     <el-date-picker
                         v-else-if="
@@ -214,10 +319,12 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
                         :type="component.type"
                         :format="component.format"
                         :size="component.size"
+                        :style="component.width ? `width: ${getWidthStyle(component.width)}` : ''"
                         :placeholder="component.placeholder"
+                        :disabled="component.disabled && component.disabled(formData)"
                     />
-                </template>
-            </el-form-item>
+                </el-form-item>
+            </template>
         </el-form>
         <template #footer>
             <el-button @click="emits('cancel')">取消</el-button>
