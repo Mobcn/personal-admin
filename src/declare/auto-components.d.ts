@@ -7,6 +7,7 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    MoCodeEditor: typeof import('./../components/edit/MoCodeEditor.vue')['default']
     MoEditDialog: typeof import('./../components/grid/components/MoEditDialog.vue')['default']
     MoGrid: typeof import('./../components/grid/MoGrid.vue')['default']
     MoIcon: typeof import('./../components/icons/MoIcon.vue')['default']

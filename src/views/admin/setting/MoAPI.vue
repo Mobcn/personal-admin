@@ -1,15 +1,11 @@
 <script setup lang="ts">
+import MoCodeEditor from './components/MoCodeEditor.vue';
 import type { MoGridProps } from '@/components/grid/MoGrid.vue';
 import type { API, ModelItem } from '@/api/auto-api-service';
 
 /** 模型缓存 */
 const modelCache = new Map<string, ModelItem>();
 
-/** 是否选择项 */
-const booleanOptions = [
-    { label: '是', value: 'true' },
-    { label: '否', value: 'false' }
-];
 /** 类型选择项 */
 const typeOptions = [
     { label: '查询', value: 'SELECT' },
@@ -120,22 +116,21 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
                 ]
             },
             {
-                type: 'select',
+                type: 'switch',
                 name: 'authorized',
-                label: '是否验证：',
-                options: booleanOptions
+                label: '是否验证：'
             },
             {
-                type: 'select',
+                type: 'switch',
                 name: 'customize',
-                label: '自定义处理：',
-                options: booleanOptions
+                label: '自定义处理：'
             },
             {
-                type: 'textarea',
+                type: 'custom',
                 name: 'handler',
                 label: '处理器：',
-                rows: 20,
+                component: MoCodeEditor,
+                height: 500,
                 placeholder: '请输入处理器',
                 visible: (editData) => editData.customize === 'true'
             },
@@ -209,6 +204,12 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
                 label: '失败消息：',
                 placeholder: '请输入失败消息',
                 visible: (editData) => editData.customize !== 'true'
+            },
+            {
+                type: 'switch',
+                name: 'status',
+                label: '状态：',
+                visible: (editData) => editData._id !== ''
             }
         ],
         rules: {

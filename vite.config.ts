@@ -72,6 +72,11 @@ export default defineConfig({
                 target: 'https://api.mobingc.cn',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api/, '')
+            },
+            '/auto': {
+                target: 'https://api.mobingc.cn',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api/, '')
             }
         }
     }

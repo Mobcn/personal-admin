@@ -59,6 +59,8 @@ const autoApiService = {
      * @param data 接口修改信息
      */
     update: async (data: UpdateAPI): Promise<API> => {
+        console.log(data);
+        
         return service.post(autoApi.update, data);
     },
 

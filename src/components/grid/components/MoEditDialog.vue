@@ -22,6 +22,18 @@ const primaryKey = computed(() => props.config.primaryKey ?? '_id');
 /** 表单数据对象 */
 const formData = ref({}) as Ref<EditData<T>>;
 
+/** 字符表单数据对象 */
+const stringFormData = computed<EditData<T>>(() => {
+    const data: any = {};
+    for (const key in formData.value) {
+        const value: any = formData.value[key];
+        if (value != null) {
+            data[key] = convertToString(value);
+        }
+    }
+    return data;
+});
+
 watchEffect(() => {
     const data: any = { [primaryKey.value]: props.params.data?.[primaryKey.value] ?? '' };
     if (props.params.data) {
@@ -32,6 +44,8 @@ watchEffect(() => {
                 (component.type === 'time' && component.isRange)
             ) {
                 data[component.name] = typeof value === 'string' ? (value ? value.split(',') : []) : value;
+            } else if (component.type === 'switch') {
+                data[component.name] = typeof value === 'string' ? value === 'true' : value;
             } else {
                 data[component.name] = convertToString(value);
             }
@@ -63,14 +77,7 @@ const confirmClickEvent = () => {
         $form.validate((valid) => {
             if (valid) {
                 const type = formData.value[primaryKey.value] ? 'update' : 'add';
-                const data = {} as any;
-                for (const key in formData.value) {
-                    const value: any = formData.value[key];
-                    if (value != null) {
-                        data[key] = convertToString(value);
-                    }
-                }
-                valid && emits('confirm', type, data);
+                valid && emits('confirm', type, stringFormData.value);
             }
         });
     }
@@ -179,6 +186,14 @@ type MoEditDialogComponent<T extends Record<string, any>> = {
       }
     | {
           /** 组件类型 */
+          type: 'switch';
+          /** 打开文本 */
+          activeText?: string;
+          /** 关闭文本 */
+          inactiveText?: string;
+      }
+    | {
+          /** 组件类型 */
           type: 'time';
           /** 是否为时间范围 */
           isRange?: boolean;
@@ -192,6 +207,14 @@ type MoEditDialogComponent<T extends Record<string, any>> = {
           type: 'year' | 'month' | 'date' | 'datetime' | 'week';
           /** 显示在输入框中的格式 */
           format?: string;
+      }
+    | {
+          /** 组件类型 */
+          type: 'custom';
+          /** 自定义组件 */
+          component: Component;
+          /** 高度 */
+          height?: number | string;
       }
 );
 
@@ -258,7 +281,7 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
             <template v-for="component in props.config.components">
                 <el-form-item
                     v-if="component.name !== primaryKey"
-                    v-show="!component.visible || component.visible(formData)"
+                    v-show="!component.visible || component.visible(stringFormData)"
                     :prop="component.name"
                     :label="component.label"
                 >
@@ -268,7 +291,7 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
                         :size="component.size"
                         :style="component.width ? `width: ${getWidthStyle(component.width)}` : ''"
                         :placeholder="component.placeholder"
-                        :disabled="component.disabled && component.disabled(formData)"
+                        :disabled="component.disabled && component.disabled(stringFormData)"
                     />
                     <el-input
                         v-else-if="component.type === 'textarea'"
@@ -278,7 +301,7 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
                         :size="component.size"
                         :style="component.width ? `width: ${getWidthStyle(component.width)}` : ''"
                         :placeholder="component.placeholder"
-                        :disabled="component.disabled && component.disabled(formData)"
+                        :disabled="component.disabled && component.disabled(stringFormData)"
                     />
                     <el-select
                         v-else-if="component.type === 'select'"
@@ -289,7 +312,7 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
                         :placeholder="component.placeholder"
                         :loading="loadOptions(component.options).length <= 0"
                         clearable
-                        :disabled="component.disabled && component.disabled(formData)"
+                        :disabled="component.disabled && component.disabled(stringFormData)"
                     >
                         <el-option
                             v-for="(item, index) in loadOptions(component.options)"
@@ -298,6 +321,14 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
                             :label="item.label"
                         ></el-option>
                     </el-select>
+                    <el-switch
+                        v-else-if="component.type === 'switch'"
+                        v-model="formData[component.name]"
+                        :active-text="component.activeText"
+                        :inactive-text="component.inactiveText"
+                        :size="component.size"
+                        :disabled="component.disabled && component.disabled(stringFormData)"
+                    />
                     <el-time-picker
                         v-else-if="component.type === 'time'"
                         v-model="(formData[component.name] as string | [string, string])"
@@ -305,7 +336,7 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
                         :size="component.size"
                         :style="component.width ? `width: ${getWidthStyle(component.width)}` : ''"
                         :placeholder="component.placeholder"
-                        :disabled="component.disabled && component.disabled(formData)"
+                        :disabled="component.disabled && component.disabled(stringFormData)"
                     />
                     <el-date-picker
                         v-else-if="
@@ -321,7 +352,17 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
                         :size="component.size"
                         :style="component.width ? `width: ${getWidthStyle(component.width)}` : ''"
                         :placeholder="component.placeholder"
-                        :disabled="component.disabled && component.disabled(formData)"
+                        :disabled="component.disabled && component.disabled(stringFormData)"
+                    />
+                    <component
+                        v-else-if="component.type === 'custom'"
+                        :is="component.component"
+                        v-model="formData[component.name]"
+                        :size="component.size"
+                        :width="component.width"
+                        :height="component.height"
+                        :placeholder="component.placeholder"
+                        :disabled="component.disabled && component.disabled(stringFormData)"
                     />
                 </el-form-item>
             </template>
