@@ -109,6 +109,23 @@ const loadOptions = (() => {
 })();
 
 /**
+ * 加载参数
+ *
+ * @param params 参数函数
+ */
+const loadParams = (params: (editDataRef: Ref<EditData<T>>) => any) => {
+    console.log(123);
+    
+    // const reactiveParams = ref({}) as Ref<any>;
+    // watchEffect(async () => {
+    //     const res = params(formData);
+    //     reactiveParams.value = await Promise.resolve(res);
+    // });
+    params(formData);
+    return params(formData);
+};
+
+/**
  * 获取组件宽度样式
  */
 function getWidthStyle(width: string | number) {
@@ -215,6 +232,8 @@ type MoEditDialogComponent<T extends Record<string, any>> = {
           component: Component;
           /** 高度 */
           height?: number | string;
+          /** 参数 */
+          params?: (editDataRef: Ref<EditData<T>>) => any;
       }
 );
 
@@ -358,6 +377,7 @@ export type MoEditDialogProps<T extends Record<string, any>> = {
                         v-else-if="component.type === 'custom'"
                         :is="component.component"
                         v-model="formData[component.name]"
+                        :params="component.params && loadParams(component.params)"
                         :size="component.size"
                         :width="component.width"
                         :height="component.height"

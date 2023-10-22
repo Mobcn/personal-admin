@@ -59,8 +59,6 @@ const autoApiService = {
      * @param data 接口修改信息
      */
     update: async (data: UpdateAPI): Promise<API> => {
-        console.log(data);
-        
         return service.post(autoApi.update, data);
     },
 
@@ -98,6 +96,8 @@ type SaveAPI = {
     authorized: boolean;
     /** 请求方法 */
     method: string;
+    /** 原始处理器 */
+    raw_handler: string;
     /** 处理器 */
     handler: string;
 } & (
@@ -159,6 +159,8 @@ export type API = {
     authorized: boolean;
     /** 请求方法 */
     method: string;
+    /** 原始处理器 */
+    raw_handler: string;
     /** 处理器 */
     handler: string;
     /** 是否自定义 */

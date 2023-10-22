@@ -2,6 +2,7 @@
 import MoCodeEditor from './components/MoCodeEditor.vue';
 import type { MoGridProps } from '@/components/grid/MoGrid.vue';
 import type { API, ModelItem } from '@/api/auto-api-service';
+import type { ParamItem } from '@/utils/handler-template';
 
 /** 模型缓存 */
 const modelCache = new Map<string, ModelItem>();
@@ -127,11 +128,17 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
             },
             {
                 type: 'custom',
-                name: 'handler',
+                name: 'raw_handler',
                 label: '处理器：',
                 component: MoCodeEditor,
                 height: 500,
                 placeholder: '请输入处理器',
+                params: (editDataRef) => {
+                    const module = editDataRef.value.module;
+                    const model = editDataRef.value.model;
+                    const modelItem = modelCache.get(module + '#' + model);
+                    return { modelItem };
+                },
                 visible: (editData) => editData.customize === 'true'
             },
             {
@@ -220,17 +227,23 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
         },
         watch: [
             (editDataRef) => {
-                editDataRef.value.handler = generateHandler({
+                let input_fields: any = editDataRef.value.input_fields;
+                let output_fields: any = editDataRef.value.output_fields;
+                input_fields instanceof Array && (input_fields = input_fields.join(','));
+                output_fields instanceof Array && (output_fields = output_fields.join(','));
+                generateHandler({
+                    module: editDataRef.value.module,
+                    model: editDataRef.value.model,
                     type: editDataRef.value.type,
-                    input_fields: editDataRef.value.input_fields,
-                    output_fields: editDataRef.value.output_fields,
+                    input_fields,
+                    output_fields,
                     where: editDataRef.value.where,
                     success_message: editDataRef.value.success_message,
                     error_message: editDataRef.value.error_message
-                });
+                }).then((handlerText) => (editDataRef.value.raw_handler = handlerText));
             }
         ],
-        width: 800,
+        width: '80%',
         labelWidth: 110
     },
     api: {
@@ -245,7 +258,7 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
             path,
             authorized,
             customize,
-            handler,
+            raw_handler,
             type,
             method,
             input_fields,
@@ -254,6 +267,7 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
             success_message,
             error_message
         }) => {
+            const minifyHandler = (await minify(raw_handler)).code || '';
             if (customize === 'true') {
                 await autoApiService.save({
                     module,
@@ -262,7 +276,8 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
                     authorized: authorized === 'true',
                     method,
                     customize: true,
-                    handler
+                    raw_handler,
+                    handler: minifyHandler
                 });
             } else {
                 if (typeOptions.findIndex((item) => item.value === type) === -1) {
@@ -275,7 +290,8 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
                     authorized: authorized === 'true',
                     customize: false,
                     method,
-                    handler,
+                    raw_handler,
+                    handler: minifyHandler,
                     type: type as any,
                     input_fields,
                     output_fields,
@@ -292,7 +308,7 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
             path,
             authorized,
             customize,
-            handler,
+            raw_handler,
             type,
             method,
             input_fields,
@@ -302,6 +318,7 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
             error_message,
             status
         }) => {
+            const minifyHandler = (await minify(raw_handler)).code || '';
             if (customize === 'true') {
                 await autoApiService.update({
                     _id,
@@ -311,7 +328,8 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
                     authorized: authorized === 'true',
                     method,
                     customize: true,
-                    handler,
+                    raw_handler,
+                    handler: minifyHandler,
                     status: status === 'true'
                 });
             } else {
@@ -326,7 +344,8 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
                     authorized: authorized === 'true',
                     customize: false,
                     method,
-                    handler,
+                    raw_handler,
+                    handler: minifyHandler,
                     type: type as any,
                     input_fields,
                     output_fields,
@@ -349,20 +368,26 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
 /**
  * 生成处理器
  */
-function generateHandler({
+async function generateHandler({
+    module = '',
+    model = '',
     type = 'SELECT',
     input_fields = '',
     output_fields = '',
-    where,
+    where = '',
     success_message = '成功!',
     error_message = '失败!'
 }: {
+    /** 模块 */
+    module?: string;
+    /** 模型 */
+    model?: string;
     /** 类型 */
     type?: string;
     /** 参数字段 */
-    input_fields?: string | string[];
+    input_fields?: string;
     /** 数据字段 */
-    output_fields?: string | string[];
+    output_fields?: string;
     /** 过滤条件 */
     where?: string;
     /** 成功信息 */
@@ -370,52 +395,26 @@ function generateHandler({
     /** 错误信息 */
     error_message?: string;
 }) {
-    let handler;
-    let params;
-    if (typeof input_fields !== 'string') {
-        params = input_fields.join(', ');
-        input_fields = input_fields.join(',');
-    } else {
-        params = input_fields.replace(/,/g, ', ');
-    }
-    if (typeof output_fields !== 'string') {
-        output_fields = output_fields.join(',');
+    const params: ParamItem[] = [];
+    if (input_fields !== '') {
+        const paramFields = input_fields.split(',');
+        const modelItem = await getModelItem(module, model);
+        paramFields.forEach((field) => params.push({ name: field, type: modelItem?.schema[field] || '*' }));
     }
     if (type === 'SELECT') {
-        params = (params ? params + ', ' : '') + 'page, limit = 10, sort = { create_time: -1 }';
-        const select = output_fields.replace(/,/g, ' ');
-        handler = `let data;
-        if (page) {
-            page = Number(page);
-            const [list, total] = await Promise.all([
-                Model.find(${where})
-                    .select('${select}')
-                    .skip((page - 1) * limit)
-                    .limit(limit)
-                    .sort(sort)
-                    .exec(),
-                Model.count(${where})
-            ]);
-            data = { list, total };
-        } else {
-            data = await Model.find(${where}).select('${select}').sort(sort).exec();
-        }`;
-    } else if (type === 'INSERT') {
-        handler = `const insertModel = new Model({ ${params} });
-        const data = await insertModel.save();`;
-    } else if (type === 'UPDATE') {
-        handler = `const data = await Model.updateMany(${where}, { $set: { ${params} } });`;
-    } else if (type === 'DELETE') {
-        handler = `const data = await Model.deleteMany({ ${params} });`;
+        const selectString = output_fields.replace(/,/g, ' ');
+        return selectHandlerTemplate(params, selectString, where, success_message, error_message);
     }
-    return `async ({ ${params} }) => {
-    try {
-        ${handler}
-        return Result.success({ message: '${success_message}', data });
-    } catch (error) {
-        throw new Error('${error_message}');
+    if (type === 'INSERT') {
+        return insertHandlerTemplate(params, success_message, error_message);
     }
-}`;
+    if (type === 'UPDATE') {
+        return updateHandlerTemplate(params, where, success_message, error_message);
+    }
+    if (type === 'DELETE') {
+        return deleteHandlerTemplate(params, success_message, error_message);
+    }
+    return commonHandlerTemplate(params, 'let data = {};', success_message, error_message);
 }
 
 /**
