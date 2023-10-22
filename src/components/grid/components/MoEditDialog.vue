@@ -113,17 +113,7 @@ const loadOptions = (() => {
  *
  * @param params 参数函数
  */
-const loadParams = (params: (editDataRef: Ref<EditData<T>>) => any) => {
-    console.log(123);
-    
-    // const reactiveParams = ref({}) as Ref<any>;
-    // watchEffect(async () => {
-    //     const res = params(formData);
-    //     reactiveParams.value = await Promise.resolve(res);
-    // });
-    params(formData);
-    return params(formData);
-};
+const loadParams = (params: (editDataRef: Ref<EditData<T>>) => any) => params(formData);
 
 /**
  * 获取组件宽度样式
