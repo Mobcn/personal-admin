@@ -227,20 +227,22 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
         },
         watch: [
             (editDataRef) => {
-                let input_fields: any = editDataRef.value.input_fields;
-                let output_fields: any = editDataRef.value.output_fields;
-                input_fields instanceof Array && (input_fields = input_fields.join(','));
-                output_fields instanceof Array && (output_fields = output_fields.join(','));
-                generateHandler({
-                    module: editDataRef.value.module,
-                    model: editDataRef.value.model,
-                    type: editDataRef.value.type,
-                    input_fields,
-                    output_fields,
-                    where: editDataRef.value.where,
-                    success_message: editDataRef.value.success_message,
-                    error_message: editDataRef.value.error_message
-                }).then((handlerText) => (editDataRef.value.raw_handler = handlerText));
+                if (editDataRef.value?.customize?.toString() === 'false') {
+                    let input_fields: any = editDataRef.value.input_fields;
+                    let output_fields: any = editDataRef.value.output_fields;
+                    input_fields instanceof Array && (input_fields = input_fields.join(','));
+                    output_fields instanceof Array && (output_fields = output_fields.join(','));
+                    generateHandler({
+                        module: editDataRef.value.module,
+                        model: editDataRef.value.model,
+                        type: editDataRef.value.type,
+                        input_fields,
+                        output_fields,
+                        where: editDataRef.value.where,
+                        success_message: editDataRef.value.success_message,
+                        error_message: editDataRef.value.error_message
+                    }).then((handlerText) => (editDataRef.value.raw_handler = handlerText));
+                }
             }
         ],
         width: '80%',
@@ -252,109 +254,57 @@ const gridProps: MoGridProps<Omit<API, '_id'> & { _id?: string }> = {
             const total = list.length;
             return { list, total };
         },
-        add: async ({
-            module,
-            model,
-            path,
-            authorized,
-            customize,
-            raw_handler,
-            type,
-            method,
-            input_fields,
-            output_fields,
-            where,
-            success_message,
-            error_message
-        }) => {
-            const minifyHandler = (await minify(raw_handler)).code || '';
-            if (customize === 'true') {
-                await autoApiService.save({
-                    module,
-                    model,
-                    path,
-                    authorized: authorized === 'true',
-                    method,
-                    customize: true,
-                    raw_handler,
-                    handler: minifyHandler
-                });
-            } else {
-                if (typeOptions.findIndex((item) => item.value === type) === -1) {
-                    type = 'SELECT';
-                }
-                await autoApiService.save({
-                    module,
-                    model,
-                    path,
-                    authorized: authorized === 'true',
+        add: async (editData) => {
+            const minifyHandler = (await minify(editData.raw_handler)).code || '';
+            const saveData: any = {
+                module: editData.module,
+                model: editData.model,
+                path: editData.path,
+                authorized: editData.authorized === 'true',
+                method: editData.method,
+                customize: true,
+                raw_handler: editData.raw_handler,
+                handler: minifyHandler
+            };
+            if (editData.customize === 'false') {
+                Object.assign(saveData, {
                     customize: false,
-                    method,
-                    raw_handler,
-                    handler: minifyHandler,
-                    type: type as any,
-                    input_fields,
-                    output_fields,
-                    where,
-                    success_message,
-                    error_message
+                    type: editData.type,
+                    input_fields: editData.input_fields,
+                    output_fields: editData.output_fields,
+                    where: editData.where,
+                    success_message: editData.success_message,
+                    error_message: editData.error_message
                 });
             }
+            await autoApiService.save(saveData);
         },
-        update: async ({
-            _id,
-            module,
-            model,
-            path,
-            authorized,
-            customize,
-            raw_handler,
-            type,
-            method,
-            input_fields,
-            output_fields,
-            where,
-            success_message,
-            error_message,
-            status
-        }) => {
-            const minifyHandler = (await minify(raw_handler)).code || '';
-            if (customize === 'true') {
-                await autoApiService.update({
-                    _id,
-                    module,
-                    model,
-                    path,
-                    authorized: authorized === 'true',
-                    method,
-                    customize: true,
-                    raw_handler,
-                    handler: minifyHandler,
-                    status: status === 'true'
-                });
-            } else {
-                if (typeOptions.findIndex((item) => item.value === type) === -1) {
-                    type = 'SELECT';
-                }
-                await autoApiService.update({
-                    _id,
-                    module,
-                    model,
-                    path,
-                    authorized: authorized === 'true',
+        update: async (editData) => {
+            const minifyHandler = (await minify(editData.raw_handler)).code || '';
+            const updateData: any = {
+                _id: editData._id,
+                module: editData.module,
+                model: editData.model,
+                path: editData.path,
+                authorized: editData.authorized === 'true',
+                method: editData.method,
+                customize: true,
+                raw_handler: editData.raw_handler,
+                handler: minifyHandler,
+                status: editData.status === 'true'
+            };
+            if (editData.customize === 'false') {
+                Object.assign(updateData, {
                     customize: false,
-                    method,
-                    raw_handler,
-                    handler: minifyHandler,
-                    type: type as any,
-                    input_fields,
-                    output_fields,
-                    where,
-                    success_message,
-                    error_message,
-                    status: status === 'true'
+                    type: editData.type,
+                    input_fields: editData.input_fields,
+                    output_fields: editData.output_fields,
+                    where: editData.where,
+                    success_message: editData.success_message,
+                    error_message: editData.error_message
                 });
             }
+            await autoApiService.update(updateData);
         },
         remove: async ({ _id }) => {
             _id && (await autoApiService.remove(_id));
