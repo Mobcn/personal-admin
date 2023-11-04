@@ -1,9 +1,15 @@
 <script setup lang="ts" generic="T extends Record<string, any>">
+import MoSearch from './components/MoSearch.vue';
+import MoToolbar from './components/MoToolbar.vue';
+import MoTable from './components/MoTable.vue';
+import MoPagination from './components/MoPagination.vue';
+import MoEditDialog from './components/MoEditDialog.vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { MoSearchProps, SearchData } from './components/MoSearch.vue';
 import type { MoToolbarProps } from './components/MoToolbar.vue';
 import type { MoTableProps, MoTableInstance } from './components/MoTable.vue';
-import type { EditData, MoEditDialogConfig, MoEditDialogParams } from './components/MoEditDialog.vue';
+import type { EditData } from './components/MoForm.vue';
+import type { MoEditDialogConfig, MoEditDialogParams } from './components/MoEditDialog.vue';
 
 /** 参数 */
 const props = defineProps<MoGridProps<T>>();
@@ -72,7 +78,7 @@ const deleteEvent = (row: T) => {
             try {
                 await api.value.remove!(row);
             } catch (error) {
-                process.env.VUE_APP_ENV !== 'production' && console.error(error);
+                window.process.env.VUE_APP_ENV !== 'production' && console.error(error);
                 ElMessage({ message: `删除失败！`, type: 'error' });
                 return;
             }
@@ -101,7 +107,7 @@ const deleteBatchEvent = async () => {
                     try {
                         await api.value.removeBatch!(rows);
                     } catch (error) {
-                        process.env.VUE_APP_ENV !== 'production' && console.error(error);
+                        window.process.env.VUE_APP_ENV !== 'production' && console.error(error);
                         ElMessage({ message: '批量删除失败！', type: 'error' });
                         return;
                     }
@@ -132,27 +138,18 @@ const limitChangeEvent = (value: number) => {
 /** 编辑弹窗确认事件 */
 const confirmEvent = async (type: 'add' | 'update', editData: EditData<T>) => {
     loading.value = true;
-    if (type === 'add') {
-        try {
-            await api.value.add!(editData);
-            ElMessage({ message: '添加成功！', type: 'success' });
-            page.value = 1;
-        } catch (error) {
-            process.env.VUE_APP_ENV !== 'production' && console.error(error);
-            ElMessage({ message: '添加失败！', type: 'error' });
-        }
-    } else {
-        try {
-            await api.value.update!(editData);
-            ElMessage({ message: '更新成功！', type: 'success' });
-        } catch (error) {
-            process.env.VUE_APP_ENV !== 'production' && console.error(error);
-            ElMessage({ message: '更新失败！', type: 'error' });
-        }
+    try {
+        await api.value[type]!(editData);
+        ElMessage({ message: `${type === 'add' ? '添加' : '更新'}成功！`, type: 'success' });
+        type === 'add' && (page.value = 1);
+        await loadData();
+        editDialogVisible.value = false;
+    } catch (error) {
+        window.process.env.VUE_APP_ENV !== 'production' && console.error(error);
+        ElMessage({ message: `${type === 'add' ? '添加' : '更新'}失败！`, type: 'error' });
+    } finally {
+        loading.value = false;
     }
-    await loadData();
-    loading.value = false;
-    editDialogVisible.value = false;
 };
 
 /**
@@ -174,7 +171,7 @@ async function loadData(searchData?: SearchData<T> | boolean) {
         tableData.value = list;
         tableTotal.value = total;
     } catch (error) {
-        process.env.VUE_APP_ENV !== 'production' && console.error(error);
+        window.process.env.VUE_APP_ENV !== 'production' && console.error(error);
         ElMessage({ message: '加载数据失败！', type: 'error' });
     } finally {
         loading.value = false;
@@ -204,7 +201,7 @@ function openEditDialog(data?: T) {
 /**
  * API参数
  */
-type ApiParams<T> = {
+type ApiParams<T extends Record<string, any>> = {
     /** 获取数据列表 */
     list: (params: ListApiParams<T>) => { list: T[]; total: number } | Promise<{ list: T[]; total: number }>;
     /** 添加数据 */
@@ -220,7 +217,7 @@ type ApiParams<T> = {
 /**
  * 获取数据列表参数
  */
-type ListApiParams<T> = {
+type ListApiParams<T extends Record<string, any>> = {
     /** 查询数据 */
     searchData?: SearchData<T>;
     /** 页码 */
@@ -266,7 +263,7 @@ export type MoGridProps<T extends Record<string, any>> = {
                     @refresh="loadData(true)"
                 />
             </el-header>
-            <el-main class="pt-3">
+            <el-main class="pt-3 h-0">
                 <mo-table
                     ref="moTableRef"
                     v-bind="props.table"

@@ -21,6 +21,9 @@ provide('changePage', changePage);
 
 // 初始化操作
 (async () => {
+    // 设置环境变量
+    window.process ??= { env: { VUE_APP_ENV: 'production' } };
+
     // 设置主题
     storage.get('mo-theme') === 'dark' && (store.theme = 'dark');
 
@@ -31,7 +34,7 @@ provide('changePage', changePage);
             changePage(import('@/views/common/Login.vue'));
         }
     } catch (error) {
-        process.env.VUE_APP_ENV !== 'production' && console.error(error);
+        window.process.env.VUE_APP_ENV !== 'production' && console.error(error);
         changePage(import('@/views/common/404.vue'));
     }
 })();

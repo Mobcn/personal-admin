@@ -34,18 +34,6 @@ const menuData: MenuData[] = [
                 component: () => import('@/views/admin/management/tag/MoTag.vue')
             }
         ]
-    },
-    {
-        title: '系统设置',
-        icon: 'gear-fill',
-        subMenu: [
-            {
-                title: '接口配置',
-                icon: 'bezier',
-                path: '/setting/api',
-                component: () => import('@/views/admin/setting/MoAPI.vue')
-            }
-        ]
     }
 ];
 

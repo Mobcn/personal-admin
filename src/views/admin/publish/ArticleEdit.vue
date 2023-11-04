@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MoIcon from '@/components/icons/MoIcon.vue';
 import { MdEditor } from 'md-editor-v3';
 import ShowImage from '@/components/function/ShowImage';
 import store from '@/store/store';
@@ -60,13 +61,13 @@ const uploadImgEvent = (files: File[], callback: (urls: string[]) => void) => {
  *
  * @param content Markdown内容
  */
-function getTempURL(content: string) {
-    const temps = content.match(/\!\[.*\]\(blob:.+\)/g);
-    if (temps) {
-        return temps.map((item) => /\((blob:.+)\)/.exec(item)![1]);
-    }
-    return [];
-}
+// function getTempURL(content: string) {
+//     const temps = content.match(/\!\[.*\]\(blob:.+\)/g);
+//     if (temps) {
+//         return temps.map((item) => /\((blob:.+)\)/.exec(item)![1]);
+//     }
+//     return [];
+// }
 
 // 初始化操作
 (() => {

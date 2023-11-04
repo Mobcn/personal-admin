@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MoIcon from '@/components/icons/MoIcon.vue';
 import { ElMessage } from 'element-plus';
 import type { FormInstance } from 'element-plus';
 import type { ProvideChangePage } from '@/App.vue';
@@ -39,22 +40,26 @@ function login() {
     if ($form) {
         $form.validate(async (valid) => {
             if (valid) {
+                let loginSuccess = false;
                 try {
                     loading.value = true;
                     const { token } = await userService.login(form.username, form.password);
                     ElMessage({ message: '登录成功！', type: 'success' });
                     storage.set('token', token);
+                    loginSuccess = true;
                 } catch (error) {
-                    process.env.VUE_APP_ENV !== 'production' && console.error(error);
+                    window.process.env.VUE_APP_ENV !== 'production' && console.error(error);
                     ElMessage({ message: '登录失败！', type: 'error' });
                 } finally {
                     loading.value = false;
                 }
-                try {
-                    changePage(import('@/views/admin/dashboard/MoDashboard.vue'));
-                } catch (error) {
-                    process.env.VUE_APP_ENV !== 'production' && console.error(error);
-                    ElMessage({ message: '跳转失败！', type: 'error' });
+                if (loginSuccess) {
+                    try {
+                        changePage(import('@/views/admin/dashboard/MoDashboard.vue'));
+                    } catch (error) {
+                        window.process.env.VUE_APP_ENV !== 'production' && console.error(error);
+                        ElMessage({ message: '跳转失败！', type: 'error' });
+                    }
                 }
             }
         });

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MoIcon from '@/components/icons/MoIcon.vue';
 import type { MenuData } from '@/utils/menu';
 
 /** 参数 */

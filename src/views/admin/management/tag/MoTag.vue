@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MoGrid from '@/components/grid/MoGrid.vue';
 import type { MoGridProps } from '@/components/grid/MoGrid.vue';
 import type { Tag } from '@/api/tag-service';
 
