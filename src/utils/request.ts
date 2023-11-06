@@ -1,28 +1,29 @@
-import FetchService from './FetchService';
 import storage from './storage';
+import * as FetchTools from './fetch-tools';
 
 // token刷新地址
 const refreshURL = '/blog/user/login';
 
 // 创建一个fetch服务实例
-const service = FetchService.create({
+FetchTools.$setBaseOptions({
     baseURL: 'http://localhost:5173',
     timeout: 5000
 });
 
 // 请求拦截器
-service.addRequestInterceptor((_url, options) => {
+FetchTools.$addRequestInterceptor((config) => {
     const token = storage.get('token');
     if (token) {
         // 配置登录认证token
-        options.headers = new Headers(options.headers);
-        options.headers.set('Authorization', 'Bearer ' + token);
+        config.headers = new Headers(config.headers);
+        config.headers.set('Authorization', 'Bearer ' + token);
     }
+    return config;
 });
 
 // 响应拦截器
-service.addResponseInterceptor((responseData) => {
-    const { code, message, data } = responseData.data;
+FetchTools.$addResponseInterceptor((responseData) => {
+    const { code, message, data } = responseData;
     if (code !== 0) {
         throw new Error(message);
     }
@@ -30,7 +31,7 @@ service.addResponseInterceptor((responseData) => {
 });
 
 // 响应错误拦截器
-service.setResponseErrorInterceptor(async (response, options) => {
+FetchTools.$addResponseErrorInterceptor(async (response, options) => {
     if (response.status !== 401) {
         throw new Error(response.statusText);
     }
@@ -39,12 +40,19 @@ service.setResponseErrorInterceptor(async (response, options) => {
         throw new Error(response.statusText);
     }
     // 刷新token
-    let { token } = await service.post(refreshURL);
+    let { token } = await FetchTools.$post(refreshURL);
     storage.set('token', token);
 
     // 重试
-    // @ts-ignore
-    return await service[options.method!.toLowerCase()](response.url, undefined, options);
+    return FetchTools.$request(response.url, options);
 });
+
+const service = {
+    get: FetchTools.$get,
+    post: FetchTools.$post,
+    put: FetchTools.$put,
+    delete: FetchTools.$delete,
+    patch: FetchTools.$patch
+};
 
 export default service;

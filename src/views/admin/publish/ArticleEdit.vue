@@ -56,18 +56,25 @@ const uploadImgEvent = (files: File[], callback: (urls: string[]) => void) => {
     );
 };
 
+/** 保存事件 */
+const saveEvent = () => {
+    const temps = getTempURL(form.value.content);
+    console.log(covers.value[0].url);
+    console.log(temps);
+};
+
 /**
  * 获取临时URL
  *
  * @param content Markdown内容
  */
-// function getTempURL(content: string) {
-//     const temps = content.match(/\!\[.*\]\(blob:.+\)/g);
-//     if (temps) {
-//         return temps.map((item) => /\((blob:.+)\)/.exec(item)![1]);
-//     }
-//     return [];
-// }
+function getTempURL(content: string) {
+    const temps = content.match(/\!\[.*\]\(blob:.+\)/g);
+    if (temps) {
+        return temps.map((item) => /\((blob:.+)\)/.exec(item)![1]);
+    }
+    return [];
+}
 
 // 初始化操作
 (() => {
@@ -174,6 +181,7 @@ const uploadImgEvent = (files: File[], callback: (urls: string[]) => void) => {
                 placeholder="请输入文章内容"
                 style="height: 100%"
                 @on-upload-img="uploadImgEvent"
+                @save="saveEvent"
             />
         </el-main>
     </el-container>
