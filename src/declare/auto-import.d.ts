@@ -56,6 +56,7 @@ declare global {
   const onUnmounted: typeof import('vue')['onUnmounted']
   const onUpdated: typeof import('vue')['onUpdated']
   const parse2Time: typeof import('../utils/date-convert')['parse2Time']
+  const patchFetch: typeof import('../utils/patch-fetch')['default']
   const provide: typeof import('vue')['provide']
   const reactive: typeof import('vue')['reactive']
   const readonly: typeof import('vue')['readonly']
